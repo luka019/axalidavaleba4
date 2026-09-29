@@ -270,7 +270,8 @@ function renderSettings(){
   <div class="card list-card"><div class="card-head"><h3>Account</h3></div><div class="list-row"><div><b>Name</b><p>${escapeHTML(displayName())}</p></div></div><div class="list-row"><div><b>Email</b><p>${escapeHTML(state.user?.email||"Demo preview")}</p></div></div><div class="list-row"><div><b>Plan</b><p>${state.profile?.plan||"Free"}</p></div></div><div class="list-row"><div><b>Legal</b><p><a href="/privacy" target="_blank" style="color:var(--blue)">Privacy</a> · <a href="/terms" target="_blank" style="color:var(--blue)">Terms</a></p></div></div></div>
   <div class="card list-card"><div class="card-head"><h3>Privacy principles</h3></div><div class="list-row"><span class="row-icon green">${icon("lock",15)}</span><div><b>Private application data</b><p>Authenticated application records are protected with Row Level Security.</p></div></div><div class="list-row"><span class="row-icon green">${icon("shield-check",15)}</span><div><b>No public raw Scholar applications</b><p>Permissioned source material remains in private knowledge tables and source types are labelled.</p></div></div><div class="list-row"><span class="row-icon gold">${icon("file-warning",15)}</span><div><b>Your own words</b><p>ShortlistProof diagnoses evidence and asks questions; it does not generate submission answers.</p></div></div></div>
  </div>
- ${state.demo?"":`<div class="card list-card" style="margin-top:14px;border-color:#f0cdd0"><div class="card-head"><h3>Application data</h3></div><p style="font-size:11px;color:var(--muted)">Delete this application workspace, including saved answers, Story Bank, course/career context, benchmarks and uploaded PDF. This cannot be undone.</p><button class="btn btn-danger" id="clearApplication">${icon("trash-2",14)} Delete application data</button></div>`}
+ ${state.demo?"":`<div class="card list-card" style="margin-top:14px;border-color:#f0cdd0"><div class="card-head"><h3>Application data</h3></div><p style="font-size:11px;color:var(--muted)">Delete this application workspace, including saved answers, Story Bank, course/career context, checks and uploaded PDF. This cannot be undone.</p><button class="btn btn-danger" id="clearApplication">${icon("trash-2",14)} Delete application data</button></div>
+ <div class="card list-card" style="margin-top:14px;border-color:#e7c2c6"><div class="card-head"><h3>Delete account</h3></div><p style="font-size:11px;color:var(--muted)">Permanently delete your ShortlistProof account and associated application data. You will be signed out immediately. This action cannot be undone.</p><button class="btn btn-danger" id="deleteAccount">${icon("user-x",14)} Delete my account</button></div>`}
  `,"settings");
  if($("#signOut"))$("#signOut").onclick=async()=>{await sb.auth.signOut();location.href="/login"};
  if($("#clearApplication"))$("#clearApplication").onclick=async()=>{
@@ -279,6 +280,15 @@ function renderSettings(){
    const r=await sb.from("applications").delete().eq("id",state.application.id);
    if(r.error)return toast("Could not delete application data.");
    toast("Application data deleted.");setTimeout(()=>location.href="/app",800);
+ };
+ if($("#deleteAccount"))$("#deleteAccount").onclick=async()=>{
+   if(!confirm("Permanently delete your ShortlistProof account and all associated data?"))return;
+   const typed=prompt('Type DELETE to confirm permanent account deletion.');
+   if(typed!=="DELETE")return toast("Account deletion cancelled.");
+   $("#deleteAccount").disabled=true;$("#deleteAccount").textContent="Deleting…";
+   const {error}=await sb.functions.invoke("delete-account",{body:{confirm:"DELETE"}});
+   if(error){$("#deleteAccount").disabled=false;$("#deleteAccount").textContent="Delete my account";return toast("Could not delete your account.");}
+   await sb.auth.signOut();location.href="/";
  };
 }
 function renderRecovery(){
