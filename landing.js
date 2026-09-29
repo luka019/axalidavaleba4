@@ -32,7 +32,7 @@ app.innerHTML=`
         <div class="product-top">
           <div class="product-dots"><span></span><span></span><span></span></div>
           <div class="product-title">Applicant Portal</div>
-          <div class="product-user">MK</div>
+          <div class="product-user"><i data-lucide="user-round"></i></div>
         </div>
         <div class="product-body">
           <div class="mini-sidebar">
@@ -45,30 +45,30 @@ app.innerHTML=`
             <div class="mini-nav"><i data-lucide="badge-check"></i> Final Proof</div>
           </div>
           <div class="mini-main">
-            <div class="mini-welcome"><div><small>GOOD AFTERNOON</small><h3>Mariam, here’s what matters next.</h3></div><span class="mini-deadline">4 days left</span></div>
+            <div class="mini-welcome"><div><small>APPLICATION OVERVIEW</small><h3>Here’s what matters next.</h3><p>Focus on the evidence that changes the application most.</p></div><span class="mini-deadline">4 days left</span></div>
             <div class="mini-metrics">
-              <div><span>Application</span><b>78%</b><i><u style="width:78%"></u></i></div>
-              <div><span>Evidence coverage</span><b>14/20</b><i><u style="width:70%"></u></i></div>
-              <div><span>Story Bank</span><b>12</b><small>experiences saved</small></div>
+              <div><span>Application progress</span><b>78%</b><i><u style="width:78%"></u></i></div>
+              <div><span>Evidence signals</span><b>14/20</b><i><u style="width:70%"></u></i></div>
+              <div><span>Strong examples</span><b>12</b><small>saved in Story Bank</small></div>
             </div>
             <div class="mini-next">
               <div class="mini-next-icon"><i data-lucide="lightbulb"></i></div>
-              <div><small>YOUR NEXT BEST ACTION</small><b>Make the influence in your leadership example visible.</b><p>You show ownership and outcome. What is still unclear is whose decision changed because of you.</p></div>
+              <div><small>PRIORITY ACTION</small><b>Make the influence in your leadership example explicit.</b><p>Ownership and outcome are visible. The remaining gap is whose decision or behaviour changed because of your actions.</p></div>
               <span><i data-lucide="arrow-right"></i></span>
             </div>
             <div class="mini-grid">
               <div class="mini-card">
-                <div class="mini-card-head"><b>Your application</b><span>View all</span></div>
+                <div class="mini-card-head"><b>Application status</b><span>View all</span></div>
                 <div class="mini-row"><em class="ok">✓</em><span><b>Leadership & influence</b><small>One gap left: influence</small></span><strong>Review</strong></div>
                 <div class="mini-row"><em class="ok">✓</em><span><b>Professional relationships</b><small>Core evidence visible</small></span><strong>Strong</strong></div>
                 <div class="mini-row"><em class="warn">!</em><span><b>Course choice</b><small>Course → career bridge</small></span><strong>Fix</strong></div>
                 <div class="mini-row"><em>•</em><span><b>Career plan</b><small>Ready for first check</small></span><strong>Check</strong></div>
               </div>
               <div class="mini-card">
-                <div class="mini-card-head"><b>Story Bank</b><span>12 stories</span></div>
+                <div class="mini-card-head"><b>Strongest evidence</b><span>Story Bank</span></div>
                 <div class="story-chip"><span></span><div><b>Contract automation rollout</b><small>Strong result · Leadership</small></div></div>
                 <div class="story-chip"><span></span><div><b>Policy workshop</b><small>Stakeholder evidence · Relationships</small></div></div>
-                <div class="mini-human-note">“Don’t rewrite everything. Fix the evidence that changes the answer most.”</div>
+                <div class="mini-human-note"><b>ShortlistProof principle</b><span>Fix the evidence first. Rewrite only after the story itself is strong enough.</span></div>
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@ app.innerHTML=`
           <div class="side-item active">Today</div><div class="side-item">My application</div><div class="side-item">Story Bank</div><div class="side-item">Proof checks</div><div class="side-item">Whole Case</div><div class="side-item">Final Proof</div>
         </aside>
         <div class="portal-main">
-          <div class="portal-heading"><div><h3>Good afternoon, Mariam.</h3><p>You do not need to fix everything today. Start with the one issue that changes the application most.</p></div><span style="font-size:10px;color:#748399">4 days to deadline</span></div>
+          <div class="portal-heading"><div><h3>Your application overview</h3><p>Start with the one issue that changes the application most.</p></div><span style="font-size:10px;color:#748399">4 days to deadline</span></div>
           <div class="portal-next"><b>Your next best action</b><p>Your leadership answer shows ownership and outcome. Influence is still unclear. Identify whose decision changed before you edit the prose.</p></div>
           <div class="portal-columns">
             <div class="portal-card"><h4>Your application</h4><div class="portal-row"><span class="portal-dot">✓</span><div><b>Leadership & influence</b><br><span style="color:#6c7b90">One gap left: influence</span></div></div><div class="portal-row"><span class="portal-dot">✓</span><div><b>Professional relationships</b><br><span style="color:#6c7b90">Core evidence visible</span></div></div><div class="portal-row"><span class="portal-dot todo">!</span><div><b>Course choice</b><br><span style="color:#6c7b90">Course → career bridge needs work</span></div></div><div class="portal-row"><span class="portal-dot todo">•</span><div><b>Career plan</b><br><span style="color:#6c7b90">Ready for first check</span></div></div></div>
