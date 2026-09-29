@@ -31,7 +31,7 @@ try:
         page.keyboard.press('Escape'); assert not page.locator('#site-nav').is_visible()
         page.screenshot(path=str(OUT/'home-mobile.png'),full_page=True)
         record('Home desktop, tablet and mobile layout; keyboard mobile menu')
-        page.evaluate("window.fetch=()=>{throw new Error('Free check must not call fetch')}")
+        page.evaluate("() => {window.fetch=()=>{throw new Error('Free check must not call fetch')}}")
         own_text='PrivateQAmarker I led a fictional volunteer project and created a small pilot. I negotiated support after a timetable challenge. The process was adopted, but I still need to examine who changed their approach and what evidence supports my explanation. This text is a test fixture, not an application answer.'
         page.locator('#answer').fill(own_text)
         page.locator('#own-work').check()
@@ -84,7 +84,7 @@ try:
         assert page.locator('#authTitle').inner_text()=='Create your free workspace.'
         page.locator('#authPassword').fill('test-password-123')
         page.locator('#togglePassword').click();assert page.locator('#authPassword').get_attribute('type')=='text'
-        page.evaluate("sb.auth.signUp=async payload=>{window.lastSignUp=payload;return {data:{session:null},error:null}}")
+        page.evaluate("() => {sb.auth.signUp=async payload=>{window.lastSignUp=payload;return {data:{session:null},error:null}}}")
         page.locator('#authName').fill('QA Fixture')
         page.locator('#authEmail').fill('qa@example.invalid')
         page.locator('#authSubmit').click()
