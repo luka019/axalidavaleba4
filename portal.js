@@ -98,6 +98,18 @@ function renderDashboard(){
  const c=completion(),d=deadlineParts(),stories=state.demo?DEMO_STORIES.length:state.stories.length;
  const actions=`<a class="btn btn-secondary" href="/app/proof-check">${icon("scan-search",15)} Run Proof Check</a><a class="btn btn-primary" href="/app/application">Continue application ${icon("arrow-right",14)}</a>`;
  const lead=c.map.leadership;
+ const criterionCards=Object.entries(c.map).map(([k,a])=>{
+   const pct=Math.round(a.good.length/5*100);
+   const cls=a.status==="Strong"?"strong":a.status==="Critical gap"?"critical":"review";
+   const gap=a.missing.length?a.primary.label:"No major structural gap";
+   return `<a class="criterion-card ${cls}" href="/app/application?criterion=${k}">
+     <div class="criterion-card-top"><span class="criterion-icon">${icon(k==="leadership"?"megaphone":k==="relationships"?"users":k==="course"?"graduation-cap":"route",15)}</span><span class="criterion-state">${a.status}</span></div>
+     <h3>${CRITERIA[k].label}</h3>
+     <div class="criterion-progress"><span style="width:${pct}%"></span></div>
+     <div class="criterion-meta"><b>${a.good.length}/5 signals visible</b><span>${escapeHTML(gap)}</span></div>
+     <div class="criterion-action">Open answer ${icon("arrow-right",12)}</div>
+   </a>`;
+ }).join("");
  const priority=c.answered<4
   ? {title:"Complete the remaining core answers",body:"Add your own drafts first. Whole Case and Final Proof become useful only when the application is visible as one candidate story.",href:"/app/application",label:"Continue application"}
   : lead.missing.length
@@ -106,6 +118,8 @@ function renderDashboard(){
  shell(`${pageHead("Your application overview","See what is complete, what still needs evidence, and the single best next action before submission.",actions)}
  <div class="priority-banner"><span class="priority-icon">${icon("sparkles",17)}</span><div><span class="priority-label">Priority action</span><h3>${priority.title}</h3><p>${priority.body}</p></div><a class="btn btn-primary" href="${priority.href}">${priority.label} ${icon("arrow-right",13)}</a></div>
  <div class="grid-kpi">${kpi("file-text","Application progress",c.progress+"%","${c.answered}/4 core answers added","",c.progress)}${kpi("target","Criteria coverage",c.visible+"/"+c.total,"Evidence signals currently visible","green",Math.round(c.visible/c.total*100))}${kpi("star","Evidence strength",c.visible>=16?"Strong":c.visible>=11?"Developing":"Needs work","Structural evidence only — not a selection score","gold")}${kpi("clock","Deadline readiness",d.d<=2?"Urgent":"On track",d.d+" days remaining","purple",Math.max(6,100-Math.min(100,d.d*5)))} </div>
+ <div class="section-title-row"><div><span class="section-eyebrow">Application map</span><h2>Four answers. One candidate story.</h2></div><p>Open the section with the biggest evidence gap first.</p></div>
+ <div class="criteria-overview">${criterionCards}</div>
  <div class="dashboard-grid"><div class="stack">
   <div class="card journey"><div class="card-head"><div><h3>Your application journey</h3><span style="font-size:10px;color:var(--muted)">Track each stage without losing the bigger story.</span></div></div><div class="steps">${[
    ["Profile","Completed","done"],["Answers",c.answered+"/4 complete",c.answered===4?"done":"current"],["Course choice",state.answers.course?"Added":"In progress",state.answers.course?"done":"current"],["Career plan",state.answers.career?"Added":"In progress",state.answers.career?"done":""],["Whole Case","Not checked",""],["Final Proof","Not checked",""]
