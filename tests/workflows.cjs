@@ -1,0 +1,20 @@
+'use strict';
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const scope={console,Map,Set,Promise,Date,URL,Blob,TextEncoder,crypto:require('node:crypto').webcrypto,setTimeout,clearTimeout,URLSearchParams};
+Object.assign(scope,{state:{demo:false,profile:{plan:'free'},user:{id:'qa-a'},application:{id:'app-a'},answers:{}},window:{},location:{origin:'https://example.test',pathname:'/app'},isSandbox:false,q:new URLSearchParams(),document:{querySelector:()=>null},sessionStorage:{setItem(){},getItem(){return null}},CRITERIA:{leadership:{},career:{}},toast(){},countWords:t=>t.trim().split(/\s+/).length,demoURL:path=>path});
+for(const name of ['ensureData','renderSettings','renderOnboarding','renderApplication','renderStoryBank','renderFinalProof','hasFullAccess','premiumCall','saveAnswer','saveApplicationContext','uploadSourceFile','renderUpgrade','waitForEntitlement','shell'])scope[name]=()=>{};
+const rows=new Map();let serial=0;
+scope.sb={functions:{invoke:async(name,{body})=>({data:body,error:null})},from(){let op,payload,filters=[];const chain={update(value){op='update';payload=value;return chain},insert(value){op='insert';payload=value;return chain},eq(k,v){filters.push([k,v]);return chain},select(){return chain},maybeSingle(){return run()},single(){return run()}};async function run(){await new Promise(r=>setTimeout(r,2));if(op==='insert'){if(rows.has(payload.criterion))return{error:{code:'23505'}};const row={...payload,id:'answer-'+ ++serial,updated_at:String(serial)};rows.set(payload.criterion,row);return{data:row}}const [key,old]=[...rows].find(([,r])=>filters.every(([k,v])=>r[k]===v))||[];if(!old)return{data:null};const row={...old,...payload,updated_at:String(++serial)};rows.set(key,row);return{data:row}}return chain}};
+vm.createContext(scope);vm.runInContext(fs.readFileSync('assets/workspace-completion.js','utf8'),scope);
+(async()=>{
+ assert(!scope.hasFullAccess());scope.state.profile={plan:'full',full_access_until:'2020-01-01'};assert(!scope.hasFullAccess());scope.state.profile={plan:'full',full_access_until:'2099-01-01'};assert(scope.hasFullAccess());scope.state.profile={plan:'free',test_access:true};assert(!scope.hasFullAccess());scope.isSandbox=true;assert(scope.hasFullAccess());scope.state.profile.test_access=false;assert(!scope.hasFullAccess());
+ scope.state.demo=true;assert(scope.hasFullAccess());scope.state.demo=false;assert.equal(scope.demoURL('/app/settings'),'/app/settings?sandbox=1');
+ assert.equal((await scope.premiumCall('whole_case')).sandbox,true);scope.isSandbox=false;assert.equal((await scope.premiumCall('comparison')).sandbox,false);
+ const first=await scope.saveAnswer('leadership','first draft');assert.equal(first.answer_text,'first draft');
+ await Promise.all([scope.saveAnswer('leadership','second draft'),scope.saveAnswer('leadership','third draft')]);assert.equal(rows.get('leadership').answer_text,'third draft');
+ rows.set('leadership',{...rows.get('leadership'),answer_text:'newer external draft',updated_at:'changed-elsewhere'});assert.equal(await scope.saveAnswer('leadership','stale draft'),null);assert.equal(rows.get('leadership').answer_text,'newer external draft');
+ assert.equal(await scope.saveAnswer('unsupported','invalid'),null);assert.equal(await scope.saveAnswer('career','x'.repeat(12001)),null);
+ console.log('PASS entitlement expiry, sandbox separation, explicit premium context, serialised saves, stale-write conflict and input bounds');
+ const {stories}=require('../lib/stories');assert.equal(stories.length,3);assert(stories.every(s=>new URL(s.source).hostname==='www.chevening.org'));
+ console.log('PASS three attributed public profiles, no anonymous testimonials');
+})().catch(error=>{console.error(error);process.exitCode=1});
