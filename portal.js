@@ -171,11 +171,12 @@ function renderProofCheck(){
  const text=state.answers[key]?.answer_text||(state.demo?DEMO_ANSWERS[key]:"");
  shell(`${pageHead("Proof Check","What can the assessor actually see in this answer?",`<a class="btn btn-secondary" href="/app/application?criterion=${key}">${icon("pencil",14)} Edit answer</a>`)}
  <div class="review-layout"><div class="review-main"><div class="card answer-analysis"><div class="card-head"><div><h3>Check one answer</h3><span style="font-size:10px;color:var(--muted)">Structural evidence check — not an official Chevening score.</span></div></div><div style="display:flex;gap:9px;margin-bottom:10px"><select id="proofCriterion" style="border:1px solid var(--line);border-radius:10px;padding:9px 11px">${Object.entries(CRITERIA).map(([k,c])=>`<option value="${k}" ${k===key?"selected":""}>${c.label}</option>`).join("")}</select></div><textarea id="proofText" class="answer-editor" style="min-height:280px">${escapeHTML(text)}</textarea><div class="editor-meta"><span id="proofWords">${countWords(text)} words</span><span>Your own text only</span></div><div class="save-bar"><button class="btn btn-primary" id="runProof">${icon("scan-search",14)} Run Proof Check</button></div></div><div id="proofOutput"></div></div>
- <div class="stack"><div class="card list-card"><div class="card-head"><h3>Why this matters</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">A polished sentence can still contain weak evidence. The check looks for visible structural signals, then asks you to strengthen the missing evidence in your own words.</p></div><div class="card list-card"><div class="card-head"><h3>Next step</h3></div><a class="list-row" href="/app/comparison?criterion=${key}"><span class="row-icon">${icon("bar-chart-3",15)}</span><div><b>Winner Comparison</b><p>Compare the evidence structure with the Scholar methodology.</p></div><span class="arrow-btn">${icon("arrow-right",12)}</span></a></div></div></div>`,"proof-check");
+ <div class="stack"><div class="card list-card"><div class="card-head"><h3>Why this matters</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">A polished sentence can still contain weak evidence. The check looks for visible structural signals, then asks you to strengthen the missing evidence in your own words.</p></div><div class="card list-card"><div class="card-head"><h3>Recent checks</h3></div><div id="proofHistory"></div></div><div class="card list-card"><div class="card-head"><h3>Next step</h3></div><a class="list-row" href="/app/comparison?criterion=${key}"><span class="row-icon">${icon("bar-chart-3",15)}</span><div><b>Winner Comparison</b><p>Compare the evidence structure with the Scholar methodology.</p></div><span class="arrow-btn">${icon("arrow-right",12)}</span></a></div></div></div>`,"proof-check");
  $("#proofText").addEventListener("input",e=>$("#proofWords").textContent=countWords(e.target.value)+" words");
  $("#proofCriterion").onchange=e=>{location.href="/app/proof-check?criterion="+e.target.value};
- $("#runProof").onclick=()=>{const k=$("#proofCriterion").value,t=$("#proofText").value;renderProofOutput(k,t);};
+ $("#runProof").onclick=async()=>{const k=$("#proofCriterion").value,t=$("#proofText").value.trim();if(!t)return toast("Add your self-written answer first.");const a=analyse(k,t);renderProofOutput(k,t);await persistProofResult(k,t,a);await loadProofHistory(k);if(!state.demo)toast("Check saved to history.");};
  if(text)renderProofOutput(key,text);
+ loadProofHistory(key);
 }
 function renderProofOutput(key,text){
  const a=analyse(key,text);const el=$("#proofOutput");if(!el)return;
@@ -363,12 +364,41 @@ async function saveApplicationContext(){
  await ensureData();toast("Application context saved.");
 }
 async function saveAnswer(criterion,text){
- if(state.demo)return;
- if(!state.user||!state.application)return toast("Sign in to save your work.");
+ if(state.demo)return null;
+ if(!state.user||!state.application){toast("Sign in to save your work.");return null}
  const payload={user_id:state.user.id,application_id:state.application.id,criterion,answer_text:text,word_count:countWords(text)};
  const r=await sb.from("answers").upsert(payload,{onConflict:"application_id,criterion"}).select().single();
- if(r.error)return toast("Could not save yet.");
- state.answers[criterion]=r.data;
+ if(r.error){toast("Could not save yet.");return null}
+ state.answers[criterion]=r.data;return r.data;
+}
+async function persistProofResult(criterion,text,analysis){
+ if(state.demo||!state.user||!state.application)return;
+ const answer=await saveAnswer(criterion,text);if(!answer)return;
+ const prev=await sb.from("benchmarks").select("*").eq("application_id",state.application.id).eq("criterion",criterion).order("created_at",{ascending:false}).limit(1).maybeSingle();
+ const status=analysis.status==="Strong"?"strong":analysis.status==="Critical gap"?"critical_gap":"needs_attention";
+ const headline=analysis.missing.length?analysis.primary.label+" is the main point to strengthen.":"Core structural signals are visible.";
+ const ins=await sb.from("benchmarks").insert({
+  user_id:state.user.id,application_id:state.application.id,answer_id:answer.id,criterion,status,headline,
+  strengths:analysis.good.map(x=>x.label),gaps:analysis.missing.map(x=>x.label),next_question:analysis.question,
+  methodology_version:"structural-v2",
+  source_snapshot:{engine:"client_structural_v2",official_criteria:true,scholar_methodology:true}
+ }).select().single();
+ if(ins.error){console.error(ins.error);return}
+ if(prev.data){
+  await sb.from("rechecks").insert({
+   user_id:state.user.id,application_id:state.application.id,criterion,
+   previous_benchmark_id:prev.data.id,new_benchmark_id:ins.data.id,
+   gaps_before:Array.isArray(prev.data.gaps)?prev.data.gaps.length:0,
+   gaps_after:analysis.missing.length
+  });
+ }
+}
+async function loadProofHistory(criterion){
+ const el=$("#proofHistory");if(!el)return;
+ if(state.demo){el.innerHTML='<p style="font-size:10px;color:var(--muted)">History appears here after you run checks in your own account.</p>';return}
+ const r=await sb.from("benchmarks").select("id,status,headline,gaps,created_at").eq("application_id",state.application.id).eq("criterion",criterion).order("created_at",{ascending:false}).limit(3);
+ if(r.error||!r.data?.length){el.innerHTML='<p style="font-size:10px;color:var(--muted)">No saved checks yet.</p>';return}
+ el.innerHTML=r.data.map(x=>`<div class="list-row"><span class="row-icon ${x.status==="strong"?"green":"gold"}">${icon(x.status==="strong"?"check":"circle-alert",14)}</span><div><b>${escapeHTML(x.headline)}</b><p>${new Date(x.created_at).toLocaleDateString()} · ${Array.isArray(x.gaps)?x.gaps.length:0} gap(s)</p></div></div>`).join("");refreshIcons();
 }
 async function saveStory(title,description,theme){
  if(state.demo)return toast("Sign in to save stories.");
