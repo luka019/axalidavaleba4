@@ -3,7 +3,7 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const types={'.css':'text/css','.js':'text/javascript','.svg':'image/svg+xml','.txt':'text/plain'};
-const routes={'/':'index','/robots.txt':'robots','/sitemap.xml':'sitemap','/privacy':'privacy','/terms':'terms'};
+const routes={'/':'index','/robots.txt':'robots','/sitemap.xml':'sitemap','/privacy':'privacy','/terms':'terms','/stories':'stories'};
 http.createServer((req,res)=>{
  try{
   const u=new URL(req.url,'http://127.0.0.1');

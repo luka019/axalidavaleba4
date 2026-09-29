@@ -3,7 +3,6 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 import hashlib,json,time,xml.etree.ElementTree as ET
-
 ROOT=Path(__file__).resolve().parents[1]
 BASE='https://axalidavaleba4.vercel.app'
 OUT=ROOT/'test-results';OUT.mkdir(exist_ok=True)
@@ -21,14 +20,14 @@ else:raise AssertionError('Production did not serve the expected compiled portal
 checks=['Production portal matches the tested source SHA-256']
 xml,_=get('/sitemap.xml')
 urls=[n.text for n in ET.fromstring(xml).findall('{*}url/{*}loc')]
-assert len(urls)==12
+assert len(urls)==13
 for url in urls:
     assert url.startswith(BASE+'/')
     data,headers=get(url[len(BASE):]);text=data.decode()
     assert '<h1' in text and '<title>' in text,url
     assert 'content="noindex' not in text,url
     assert headers.get('content-security-policy') or headers.get('Content-Security-Policy'),url
-checks.append('All 12 public sitemap URLs return server-rendered pages with CSP and no accidental noindex')
+checks.append('All 13 public sitemap URLs return server-rendered pages with CSP and no accidental noindex')
 for route in ['/app','/login','/auth/callback']:
     _,headers=get(route)
     h={k.lower():v for k,v in headers.items()}
@@ -42,7 +41,7 @@ try:
 except HTTPError as error:
     assert error.code==404
 checks.append('Unknown guide returns 404; robots excludes private workspace')
-for asset in ['/assets/site.css','/assets/site.js','/assets/portal-polish.css','/assets/auth-handoff.js','/assets/mark.svg']:
+for asset in ['/assets/site.css','/assets/site.js','/assets/portal-polish.css','/assets/auth-handoff.js','/assets/mark.svg','/assets/workflows.css','/assets/conversion.css']:
     data,_=get(asset);assert len(data)>50,asset
 checks.append('Public and private interface assets are available')
 (OUT/'production-report.json').write_text(json.dumps({'base_url':BASE,'runtime_sha256':expected,'passed':checks,'limitations':['Read-only deployment checks; not proof of email, database, payment or AI workflows.']},indent=2))

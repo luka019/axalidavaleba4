@@ -5,6 +5,7 @@
   {"source":"/","destination":"/api"},
   {"source":"/robots.txt","destination":"/api/robots"},
   {"source":"/sitemap.xml","destination":"/api/sitemap"},
+  {"source":"/stories","destination":"/api/stories"},
   {"source":"/guides","destination":"/api/resources?page=guides"},
   {"source":"/guides/:slug","destination":"/api/resources?page=guides&slug=:slug"},
   {"source":"/methodology","destination":"/api/resources?page=methodology"},
