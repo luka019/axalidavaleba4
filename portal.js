@@ -51,7 +51,9 @@ function analyse(key,text){
 }
 function routeFromPath(){
  if(location.pathname==="/login")return "login";
- const part=location.pathname.replace(/^\/app\/?/,"").split("/")[0];return part&&ROUTES[part]?part:"dashboard";
+ const part=location.pathname.replace(/^\/app\/?/,"").split("/")[0];
+ if(part==="onboarding")return "onboarding";
+ return part&&ROUTES[part]?part:"dashboard";
 }
 function navPath(key){return key==="dashboard"?"/app":"/app/"+key}
 function hasFullAccess(){return state.demo||state.profile?.plan==="full"}
@@ -69,6 +71,26 @@ function completion(){
  return {visible,total,answered,progress:Math.round(answered/4*100),map:m};
 }
 function deadlineParts(){const ms=Math.max(0,DEADLINE-Date.now());return{d:Math.floor(ms/86400000),h:Math.floor(ms%86400000/3600000),m:Math.floor(ms%3600000/60000)}}
+function onboardingDone(){return !!state.application?.onboarding_completed_at}
+function onboardingDismissed(){return !!state.application?.onboarding_dismissed_at}
+async function updateOnboarding(fields){
+ if(state.demo||!state.application)return;
+ const payload={...fields,updated_at:new Date().toISOString()};
+ const r=await sb.from("applications").update(payload).eq("id",state.application.id).select().single();
+ if(r.error)throw r.error;
+ state.application=r.data;
+}
+async function setOnboardingStep(step){
+ await updateOnboarding({onboarding_step:Math.max(1,Math.min(5,step)),onboarding_dismissed_at:null});
+}
+async function dismissOnboarding(){
+ await updateOnboarding({onboarding_dismissed_at:new Date().toISOString()});
+ location.href="/app";
+}
+async function completeOnboarding(){
+ await updateOnboarding({onboarding_step:5,onboarding_completed_at:new Date().toISOString(),onboarding_dismissed_at:null});
+}
+
 async function premiumCall(action,payload={}){
  const {data,error}=await sb.functions.invoke("premium-analysis",{body:{action,...payload}});
  if(error)throw error;
@@ -94,6 +116,134 @@ function bindCommon(){
 function pageHead(title,sub,actions=""){return`<div class="page-head"><div><h1 class="page-title">${title}</h1><p class="page-sub">${sub}</p></div><div class="head-actions">${actions}</div></div>`}
 function kpi(iconName,label,value,note,cls="",pct=null){return`<div class="card kpi ${cls}"><div class="kpi-top"><span class="kpi-icon">${icon(iconName,17)}</span>${label}</div><div class="kpi-value">${value}</div>${pct!==null?`<div class="progress"><span style="width:${pct}%"></span></div>`:""}<div class="kpi-note ${note?.startsWith("↑")?"good":""}">${note||""}</div></div>`}
 
+function renderOnboarding(){
+ if(state.demo){location.replace("/app?demo=1");return}
+ if(onboardingDone()){
+  root.innerHTML=`<div class="onboarding-screen"><div class="onboarding-shell onboarding-complete"><a class="onboarding-brand" href="/">${icon("layers",18)} <span>ShortlistProof</span></a><div class="onboarding-complete-mark">${icon("badge-check",28)}</div><span class="onboarding-kicker">Setup complete</span><h1>Your workspace is ready.</h1><p>You can update your application context at any time from My Application.</p><div class="onboarding-actions"><a class="btn btn-primary" href="/app">Go to dashboard ${icon("arrow-right",14)}</a><a class="btn btn-secondary" href="/app/application">Review application</a></div></div></div>`;refreshIcons();return;
+ }
+ const step=Math.max(1,Math.min(5,Number(state.application?.onboarding_step||1)));
+ const steps=[
+  ["About you","Your workspace"],
+  ["Evidence","Optional source"],
+  ["Course","First choice"],
+  ["Career","Direction"],
+  ["First answer","Proof Check"]
+ ];
+ const progress=steps.map((s,i)=>`<div class="onboarding-step ${i+1<step?"done":i+1===step?"active":""}"><span>${i+1<step?icon("check",11):i+1}</span><div><b>${s[0]}</b><small>${s[1]}</small></div></div>`).join("");
+ const wrap=(body,footer="")=>{
+  root.innerHTML=`<div class="onboarding-screen">
+   <div class="onboarding-top"><a class="onboarding-brand" href="/">${icon("layers",18)} <span>ShortlistProof</span></a><button class="onboarding-skip" id="skipOnboarding">Skip for now</button></div>
+   <div class="onboarding-layout">
+    <aside class="onboarding-progress"><span class="onboarding-kicker">2–3 minute setup</span><h2>Make the first check useful.</h2><p>Add just enough context for ShortlistProof to understand the evidence around your application.</p><div class="onboarding-steps">${progress}</div><div class="onboarding-privacy">${icon("shield-check",14)} <span>Your application stays private. You can change or delete this information later.</span></div></aside>
+    <main class="onboarding-panel">${body}${footer}</main>
+   </div>
+  </div>`;
+  refreshIcons();
+  $("#skipOnboarding").onclick=()=>dismissOnboarding().catch(()=>toast("Could not save setup progress."));
+ };
+ if(step===1){
+  const name=escapeHTML(displayName());
+  wrap(`<div class="onboarding-copy"><span class="onboarding-kicker">Step 1 of 5</span><h1>Start with your workspace.</h1><p>This is not a profile exercise. We only need the basics so your application workspace feels like yours.</p></div>
+   <div class="onboarding-card">
+    <label class="onboarding-field"><span>Your name</span><input id="onboardingName" maxlength="120" autocomplete="name" value="${name}" placeholder="Your name"></label>
+    <div class="onboarding-note">${icon("sparkles",15)} <div><b>What happens next?</b><p>Add an optional evidence source, your course and career direction, then run one Proof Check on your own draft.</p></div></div>
+   </div>`,
+   `<div class="onboarding-footer"><span>Nothing here is submitted to Chevening.</span><button class="btn btn-primary" id="onboardingNext">Continue ${icon("arrow-right",14)}</button></div>`);
+  $("#onboardingNext").onclick=async()=>{
+   const name=$("#onboardingName").value.trim();
+   if(!name)return toast("Add your name first.");
+   $("#onboardingNext").disabled=true;
+   const r=await sb.from("users").update({display_name:name,updated_at:new Date().toISOString()}).eq("id",state.user.id).select().single();
+   if(r.error){$("#onboardingNext").disabled=false;return toast("Could not save your name.");}
+   state.profile=r.data;await setOnboardingStep(2);renderOnboarding();
+  };
+  return;
+ }
+ if(step===2){
+  const hasFile=!!state.application?.source_file_path;
+  wrap(`<div class="onboarding-copy"><span class="onboarding-kicker">Step 2 of 5</span><h1>Add an evidence source — if you have one.</h1><p>A CV or LinkedIn PDF can keep your experience history close to the application. This step is optional.</p></div>
+   <div class="onboarding-card">
+    <label class="onboarding-upload ${hasFile?"has-file":""}">${icon(hasFile?"file-check-2":"file-up",22)}<div><b id="sourceFileStatus">${hasFile?"PDF saved privately":"Choose a CV or LinkedIn PDF"}</b><span>PDF only · maximum 10 MB</span></div><input id="onboardingSourceFile" type="file" accept="application/pdf"></label>
+    <div class="onboarding-note neutral">${icon("info",15)} <div><b>No file? No problem.</b><p>You can build the Story Bank manually and add a PDF later from My Application.</p></div></div>
+   </div>`,
+   `<div class="onboarding-footer"><button class="btn btn-secondary" id="onboardingBack">Back</button><div class="onboarding-footer-right"><button class="btn btn-secondary" id="onboardingLater">I’ll add this later</button><button class="btn btn-primary" id="onboardingNext">Continue ${icon("arrow-right",14)}</button></div></div>`);
+  $("#onboardingBack").onclick=async()=>{await setOnboardingStep(1);renderOnboarding()};
+  $("#onboardingLater").onclick=async()=>{await setOnboardingStep(3);renderOnboarding()};
+  $("#onboardingSourceFile").onchange=async e=>{const file=e.target.files?.[0];if(!file)return;await uploadSourceFile(file);renderOnboarding()};
+  $("#onboardingNext").onclick=async()=>{await setOnboardingStep(3);renderOnboarding()};
+  return;
+ }
+ if(step===3){
+  const course=state.course||{};
+  wrap(`<div class="onboarding-copy"><span class="onboarding-kicker">Step 3 of 5</span><h1>What is your first-choice course?</h1><p>We use this context to test whether your course choice solves a real capability gap and connects to your career plan.</p></div>
+   <div class="onboarding-card">
+    <div class="onboarding-grid">
+     <label class="onboarding-field"><span>University</span><input id="obCourseInstitution" maxlength="180" value="${escapeHTML(course.institution||"")}" placeholder="e.g. University name"></label>
+     <label class="onboarding-field"><span>Programme</span><input id="obCourseProgramme" maxlength="220" value="${escapeHTML(course.programme||"")}" placeholder="e.g. MSc / LLM programme"></label>
+    </div>
+    <label class="onboarding-field"><span>Relevant modules <small>optional · comma-separated</small></span><input id="obCourseModules" maxlength="600" value="${escapeHTML((course.modules||[]).join(", "))}" placeholder="Module 1, Module 2"></label>
+   </div>`,
+   `<div class="onboarding-footer"><button class="btn btn-secondary" id="onboardingBack">Back</button><div class="onboarding-footer-right"><button class="btn btn-secondary" id="onboardingLater">I’ll add this later</button><button class="btn btn-primary" id="onboardingNext">Save & continue ${icon("arrow-right",14)}</button></div></div>`);
+  $("#onboardingBack").onclick=async()=>{await setOnboardingStep(2);renderOnboarding()};
+  $("#onboardingLater").onclick=async()=>{await setOnboardingStep(4);renderOnboarding()};
+  $("#onboardingNext").onclick=async()=>{
+   const institution=$("#obCourseInstitution").value.trim(),programme=$("#obCourseProgramme").value.trim();
+   if(!institution||!programme)return toast("Add the university and programme, or choose ‘I’ll add this later’.");
+   const modules=$("#obCourseModules").value.split(",").map(x=>x.trim()).filter(Boolean).slice(0,20);
+   const r=await sb.from("courses").upsert({user_id:state.user.id,application_id:state.application.id,preference_order:1,institution,programme,modules,updated_at:new Date().toISOString()},{onConflict:"application_id,preference_order"}).select().single();
+   if(r.error)return toast("Could not save course context.");
+   state.course=r.data;await setOnboardingStep(4);renderOnboarding();
+  };
+  return;
+ }
+ if(step===4){
+  const goals=state.careerGoals||{};
+  wrap(`<div class="onboarding-copy"><span class="onboarding-kicker">Step 4 of 5</span><h1>Sketch the direction, not the perfect wording.</h1><p>Short, mid and long term are enough. These are context notes — not application answers.</p></div>
+   <div class="onboarding-card">
+    <label class="onboarding-field"><span>Short term</span><textarea id="obGoalShort" rows="3" maxlength="1200" placeholder="Immediately after returning...">${escapeHTML(goals.short?.goal||"")}</textarea></label>
+    <label class="onboarding-field"><span>3–5 years</span><textarea id="obGoalMid" rows="3" maxlength="1200" placeholder="The bridge to your longer-term ambition...">${escapeHTML(goals.mid?.goal||"")}</textarea></label>
+    <label class="onboarding-field"><span>Long term</span><textarea id="obGoalLong" rows="3" maxlength="1200" placeholder="The longer-term role or impact...">${escapeHTML(goals.long?.goal||"")}</textarea></label>
+   </div>`,
+   `<div class="onboarding-footer"><button class="btn btn-secondary" id="onboardingBack">Back</button><div class="onboarding-footer-right"><button class="btn btn-secondary" id="onboardingLater">I’ll add this later</button><button class="btn btn-primary" id="onboardingNext">Save & continue ${icon("arrow-right",14)}</button></div></div>`);
+  $("#onboardingBack").onclick=async()=>{await setOnboardingStep(3);renderOnboarding()};
+  $("#onboardingLater").onclick=async()=>{await setOnboardingStep(5);renderOnboarding()};
+  $("#onboardingNext").onclick=async()=>{
+   const vals={short:$("#obGoalShort").value.trim(),mid:$("#obGoalMid").value.trim(),long:$("#obGoalLong").value.trim()};
+   if(!vals.short&&!vals.mid&&!vals.long)return toast("Add at least one career direction, or choose ‘I’ll add this later’.");
+   const tasks=Object.entries(vals).filter(([,goal])=>goal).map(([horizon,goal])=>sb.from("career_goals").upsert({user_id:state.user.id,application_id:state.application.id,horizon,goal,updated_at:new Date().toISOString()},{onConflict:"application_id,horizon"}).select().single());
+   const results=await Promise.all(tasks);if(results.some(x=>x.error))return toast("Could not save all career context.");
+   await ensureData();await setOnboardingStep(5);renderOnboarding();
+  };
+  return;
+ }
+ const criterion=q.get("criterion")&&CRITERIA[q.get("criterion")]?q.get("criterion"):"leadership";
+ const draft=state.answers[criterion]?.answer_text||"";
+ const a=analyse(criterion,draft);
+ wrap(`<div class="onboarding-copy"><span class="onboarding-kicker">Step 5 of 5</span><h1>Run your first Proof Check.</h1><p>Paste or write one answer in your own words. We’ll show which evidence signals are visible and what is still missing.</p></div>
+  <div class="onboarding-card">
+   <label class="onboarding-field"><span>Choose an answer</span><select id="obCriterion">${Object.entries(CRITERIA).map(([k,v])=>`<option value="${k}" ${k===criterion?"selected":""}>${v.label}</option>`).join("")}</select></label>
+   <div id="obSignals" class="editor-signals">${a.signals.map(s=>`<span class="signal-chip ${s.hit?"visible":""}">${icon(s.hit?"check":"circle",11)} ${s.label}</span>`).join("")}</div>
+   <textarea id="obAnswer" class="answer-editor onboarding-answer" maxlength="7000" placeholder="Add your self-written answer...">${escapeHTML(draft)}</textarea>
+   <div class="editor-meta"><span id="obWords">${countWords(draft)} words</span><span>Your own words only</span></div>
+  </div>`,
+  `<div class="onboarding-footer"><button class="btn btn-secondary" id="onboardingBack">Back</button><div class="onboarding-footer-right"><button class="btn btn-secondary" id="onboardingLater">Finish for now</button><button class="btn btn-primary" id="onboardingNext">${icon("scan-search",14)} Save & run Proof Check</button></div></div>`);
+ const updateSignals=()=>{
+  const k=$("#obCriterion").value,t=$("#obAnswer").value,a=analyse(k,t);
+  $("#obWords").textContent=countWords(t)+" words";
+  $("#obSignals").innerHTML=a.signals.map(s=>`<span class="signal-chip ${s.hit?"visible":""}">${icon(s.hit?"check":"circle",11)} ${s.label}</span>`).join("");refreshIcons();
+ };
+ $("#obCriterion").onchange=()=>{const k=$("#obCriterion").value;const saved=state.answers[k]?.answer_text||"";$("#obAnswer").value=saved;updateSignals()};
+ $("#obAnswer").addEventListener("input",updateSignals);
+ $("#onboardingBack").onclick=async()=>{await setOnboardingStep(4);renderOnboarding()};
+ $("#onboardingLater").onclick=async()=>{await completeOnboarding();location.href="/app"};
+ $("#onboardingNext").onclick=async()=>{
+  const k=$("#obCriterion").value,t=$("#obAnswer").value.trim();
+  if(!t)return toast("Add one self-written answer first.");
+  $("#onboardingNext").disabled=true;
+  const saved=await saveAnswer(k,t);if(!saved){$("#onboardingNext").disabled=false;return}
+  await completeOnboarding();location.href="/app/proof-check?criterion="+encodeURIComponent(k);
+ };
+}
 function renderDashboard(){
  const c=completion(),d=deadlineParts(),stories=state.demo?DEMO_STORIES.length:state.stories.length;
  const actions=`<a class="btn btn-secondary" href="/app/proof-check">${icon("scan-search",15)} Run Proof Check</a><a class="btn btn-primary" href="/app/application">Continue application ${icon("arrow-right",14)}</a>`;
@@ -115,7 +265,9 @@ function renderDashboard(){
   : lead.missing.length
    ? {title:"Strengthen "+lead.primary.label.toLowerCase()+" in your leadership answer",body:lead.question,href:"/app/proof-check?criterion=leadership",label:"Review leadership"}
    : {title:"Read the four answers as one case",body:"Your core answers are present. The next useful step is to test repetition, course-to-career alignment and narrative consistency.",href:"/app/whole-case",label:"Run Whole Case"};
+ const resumeSetup=!onboardingDone()&&onboardingDismissed()?`<div class="setup-resume"><span class="row-icon">${icon("wand-sparkles",16)}</span><div><b>Finish setting up your workspace</b><p>Resume where you left off. Your progress is saved.</p></div><a class="btn btn-secondary" href="/app/onboarding">Resume setup ${icon("arrow-right",13)}</a></div>`:"";
  shell(`${pageHead("Your application overview","See what is complete, what still needs evidence, and the single best next action before submission.",actions)}
+ ${resumeSetup}
  <div class="priority-banner"><span class="priority-icon">${icon("sparkles",17)}</span><div><span class="priority-label">Priority action</span><h3>${priority.title}</h3><p>${priority.body}</p></div><a class="btn btn-primary" href="${priority.href}">${priority.label} ${icon("arrow-right",13)}</a></div>
  <div class="grid-kpi">${kpi("file-text","Application progress",c.progress+"%","${c.answered}/4 core answers added","",c.progress)}${kpi("target","Criteria coverage",c.visible+"/"+c.total,"Evidence signals currently visible","green",Math.round(c.visible/c.total*100))}${kpi("star","Evidence strength",c.visible>=16?"Strong":c.visible>=11?"Developing":"Needs work","Structural evidence only — not a selection score","gold")}${kpi("clock","Deadline readiness",d.d<=2?"Urgent":"On track",d.d+" days remaining","purple",Math.max(6,100-Math.min(100,d.d*5)))} </div>
  <div class="section-title-row"><div><span class="section-eyebrow">Application map</span><h2>Four answers. One candidate story.</h2></div><p>Open the section with the biggest evidence gap first.</p></div>
@@ -535,6 +687,8 @@ async function init(){
   }
   await ensureData();
   if(!state.demo&&!state.user){location.replace("/login");return}
+  if(state.route==="onboarding"){renderOnboarding();return}
+  if(!state.demo&&state.route==="dashboard"&&!onboardingDone()&&!onboardingDismissed()){location.replace("/app/onboarding");return}
   await waitForEntitlement();
   if(PREMIUM_ROUTES.has(state.route)&&!hasFullAccess()){renderUpgrade(state.route);return}
   if(state.route==="dashboard")renderDashboard();
