@@ -148,14 +148,20 @@ function renderApplication(){
  let active=q.get("criterion")||"leadership";if(!CRITERIA[active])active="leadership";
  const tabs=Object.entries(CRITERIA).map(([k,c])=>`<button class="answer-tab ${k===active?"active":""}" data-tab="${k}"><b>${c.label}</b><span>${countWords(answerText(k))} words</span></button>`).join("");
  const course=state.course||{},goals=state.careerGoals||{};
+ const currentText=state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:"");
+ const currentAnalysis=analyse(active,currentText);
  const sourceLabel=state.application?.source_file_path?"PDF saved privately":"No CV/LinkedIn PDF added";
  shell(`${pageHead("My Application","Keep the evidence, course context, career direction and four self-written answers in one place.",`<a class="btn btn-secondary" href="/app/whole-case">${icon("waypoints",15)} Whole Case</a><a class="btn btn-primary" href="/app/proof-check?criterion=${active}">Run Proof Check ${icon("arrow-right",14)}</a>`)}
  <div class="application-grid">
   <div class="card answer-card">
    <div class="answer-tabs">${tabs}</div>
-   <div class="card-head"><div><h3 id="answerTitle">${CRITERIA[active].label}</h3><span style="font-size:10px;color:var(--muted)">Write and edit your own answer. ShortlistProof does not generate submission text.</span></div></div>
-   <textarea id="answerEditor" class="answer-editor" maxlength="7000" placeholder="Add your self-written answer...">${escapeHTML(state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:""))}</textarea>
-   <div class="editor-meta"><span id="editorWords">${countWords(state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:""))} words</span><span>Saved privately when signed in</span></div>
+   <div class="editor-head">
+    <div><span class="section-eyebrow">Core answer</span><h3 id="answerTitle">${CRITERIA[active].label}</h3><p>Write in your own words. Use the checklist to see what evidence is visible before you polish the prose.</p></div>
+    <span id="editorStatus" class="status-pill ${currentAnalysis.status==="Strong"?"good":"warn"}"><span class="dot"></span>${currentAnalysis.status}</span>
+   </div>
+   <div id="editorSignals" class="editor-signals">${currentAnalysis.signals.map(s=>`<span class="signal-chip ${s.hit?"visible":""}">${icon(s.hit?"check":"circle",11)} ${s.label}</span>`).join("")}</div>
+   <textarea id="answerEditor" class="answer-editor" maxlength="7000" placeholder="Add your self-written answer...">${escapeHTML(currentText)}</textarea>
+   <div class="editor-meta"><span id="editorWords">${countWords(currentText)} words</span><span id="saveState">${state.demo?"Demo preview":"Saved"}</span></div>
    <div class="save-bar"><a class="btn btn-secondary" id="checkCurrent" href="/app/proof-check?criterion=${active}">Check this answer</a><button class="btn btn-primary" id="saveAnswer">${icon("save",14)} Save answer</button></div>
   </div>
   <div class="stack">
@@ -186,8 +192,17 @@ function renderApplication(){
   </div>
  </div>`,"application");
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{location.href="/app/application?criterion="+b.dataset.tab});
- $("#answerEditor").addEventListener("input",e=>$("#editorWords").textContent=countWords(e.target.value)+" words");
- $("#saveAnswer").onclick=async()=>{await saveAnswer(active,$("#answerEditor").value);if(!state.demo)toast("Answer saved.");};
+ const updateEditorSignals=()=>{
+   const text=$("#answerEditor").value,a=analyse(active,text);
+   $("#editorWords").textContent=countWords(text)+" words";
+   $("#editorSignals").innerHTML=a.signals.map(s=>`<span class="signal-chip ${s.hit?"visible":""}">${icon(s.hit?"check":"circle",11)} ${s.label}</span>`).join("");
+   $("#editorStatus").className="status-pill "+(a.status==="Strong"?"good":"warn");
+   $("#editorStatus").innerHTML='<span class="dot"></span>'+a.status;
+   if(!state.demo)$("#saveState").textContent="Unsaved changes";
+   refreshIcons();
+ };
+ $("#answerEditor").addEventListener("input",updateEditorSignals);
+ $("#saveAnswer").onclick=async()=>{if(state.demo)return toast("Create an account to save your own work.");$("#saveState").textContent="Saving…";const saved=await saveAnswer(active,$("#answerEditor").value);$("#saveState").textContent=saved?"Saved just now":"Save failed";if(saved)toast("Answer saved.");};
  $("#saveContext").onclick=()=>saveApplicationContext();
  $("#sourceFile").onchange=e=>uploadSourceFile(e.target.files?.[0]);
 }
