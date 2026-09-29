@@ -56,7 +56,7 @@ function toast(msg){const el=document.createElement("div");el.className="toast";
 function displayName(){return state.profile?.display_name||state.user?.user_metadata?.display_name||state.user?.email?.split("@")[0]||"Applicant"}
 function initials(){return displayName().split(/\s+/).map(x=>x[0]).slice(0,2).join("").toUpperCase()}
 function countWords(s){return (s?.trim().match(/\S+/g)||[]).length}
-function answerText(k){return state.answers[k]?.answer_text||DEMO_ANSWERS[k]||""}
+function answerText(k){return state.answers[k]?.answer_text||(state.demo?DEMO_ANSWERS[k]:"")}
 function analysisMap(){return Object.fromEntries(Object.keys(CRITERIA).map(k=>[k,analyse(k,answerText(k))]))}
 function completion(){
  const m=analysisMap();const total=20,visible=Object.values(m).reduce((a,x)=>a+x.good.length,0);
@@ -70,7 +70,7 @@ function shell(content,active){
  const mobile=["dashboard","application","proof-check","story-bank","final-proof"].map(k=>`<a class="${active===k?"active":""}" href="${navPath(k)}">${icon(ROUTES[k].icon,17)}<span>${ROUTES[k].label.replace("My ","")}</span></a>`).join("");
  root.innerHTML=`<div class="portal">
   <aside class="sidebar"><a class="side-brand" href="/"><span class="brand-mark">${icon("layers",18)}</span><span><span>ShortlistProof</span><span class="side-sub">Applicant Portal</span></span></a><nav class="side-nav">${links}</nav><div class="side-spacer"></div><div class="side-promo"><span class="crown">${icon("crown",18)}</span><strong>Your Chevening journey, stronger with evidence.</strong><p>See what your application proves — and what it still leaves unclear.</p></div></aside>
-  <main class="main"><header class="topbar"><div class="search">${icon("search",16)}<input id="globalSearch" placeholder="Search your application, stories, or resources..."></div><div class="top-actions"><button class="icon-btn" title="Notifications">${icon("bell",17)}</button><button class="icon-btn" title="Language">${icon("globe-2",17)}</button><a class="profile" href="/app/settings"><span class="avatar">${initials()}</span><span class="profile-meta"><b>${displayName()}</b><span>${state.demo?"Demo applicant":"Applicant"}</span></span>${icon("chevron-down",14)}</a></div></header><div class="content">${state.demo?'<div class="callout" style="margin-bottom:14px"><div class="row-icon">'+icon("eye",16)+'</div><div><b>Portal preview</b><p>You are viewing realistic demo data. Create an account to save your own application, answers and Story Bank.</p></div><a class="btn btn-primary" style="margin-left:auto" href="/login">Create account</a></div>':""}${content}</div></main>
+  <main class="main"><header class="topbar"><div class="search">${icon("search",16)}<input id="globalSearch" placeholder="Search your application, stories, or resources..."></div><div class="top-actions"><button class="icon-btn" title="Notifications">${icon("bell",17)}</button><button class="icon-btn" title="Language">${icon("globe-2",17)}</button><a class="profile" href="/app/settings"><span class="avatar">${escapeHTML(initials())}</span><span class="profile-meta"><b>${escapeHTML(displayName())}</b><span>${state.demo?"Demo applicant":"Applicant"}</span></span>${icon("chevron-down",14)}</a></div></header><div class="content">${state.demo?'<div class="callout" style="margin-bottom:14px"><div class="row-icon">'+icon("eye",16)+'</div><div><b>Portal preview</b><p>You are viewing realistic demo data. Create an account to save your own application, answers and Story Bank.</p></div><a class="btn btn-primary" style="margin-left:auto" href="/login">Create account</a></div>':""}${content}</div></main>
   <nav class="mobile-nav">${mobile}</nav>
  </div>`;
  refreshIcons();
@@ -84,7 +84,7 @@ function pageHead(title,sub,actions=""){return`<div class="page-head"><div><h1 c
 function kpi(iconName,label,value,note,cls="",pct=null){return`<div class="card kpi ${cls}"><div class="kpi-top"><span class="kpi-icon">${icon(iconName,17)}</span>${label}</div><div class="kpi-value">${value}</div>${pct!==null?`<div class="progress"><span style="width:${pct}%"></span></div>`:""}<div class="kpi-note ${note?.startsWith("↑")?"good":""}">${note||""}</div></div>`}
 
 function renderDashboard(){
- const c=completion(),d=deadlineParts(),stories=state.stories.length||DEMO_STORIES.length;
+ const c=completion(),d=deadlineParts(),stories=state.demo?DEMO_STORIES.length:state.stories.length;
  const actions=`<a class="btn btn-secondary" href="/app/proof-check">${icon("scan-search",15)} Run Proof Check</a><a class="btn btn-primary" href="/app/application">Continue application ${icon("arrow-right",14)}</a>`;
  const lead=c.map.leadership;
  const priority=c.answered<4
@@ -129,7 +129,7 @@ function renderApplication(){
   <div class="card answer-card">
    <div class="answer-tabs">${tabs}</div>
    <div class="card-head"><div><h3 id="answerTitle">${CRITERIA[active].label}</h3><span style="font-size:10px;color:var(--muted)">Write and edit your own answer. ShortlistProof does not generate submission text.</span></div></div>
-   <textarea id="answerEditor" class="answer-editor" maxlength="7000" placeholder="Add your self-written answer...">${state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:"")}</textarea>
+   <textarea id="answerEditor" class="answer-editor" maxlength="7000" placeholder="Add your self-written answer...">${escapeHTML(state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:""))}</textarea>
    <div class="editor-meta"><span id="editorWords">${countWords(state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:""))} words</span><span>Saved privately when signed in</span></div>
    <div class="save-bar"><a class="btn btn-secondary" id="checkCurrent" href="/app/proof-check?criterion=${active}">Check this answer</a><button class="btn btn-primary" id="saveAnswer">${icon("save",14)} Save answer</button></div>
   </div>
@@ -170,7 +170,7 @@ function renderProofCheck(){
  let key=q.get("criterion")||"leadership";if(!CRITERIA[key])key="leadership";
  const text=state.answers[key]?.answer_text||(state.demo?DEMO_ANSWERS[key]:"");
  shell(`${pageHead("Proof Check","What can the assessor actually see in this answer?",`<a class="btn btn-secondary" href="/app/application?criterion=${key}">${icon("pencil",14)} Edit answer</a>`)}
- <div class="review-layout"><div class="review-main"><div class="card answer-analysis"><div class="card-head"><div><h3>Check one answer</h3><span style="font-size:10px;color:var(--muted)">Structural evidence check — not an official Chevening score.</span></div></div><div style="display:flex;gap:9px;margin-bottom:10px"><select id="proofCriterion" style="border:1px solid var(--line);border-radius:10px;padding:9px 11px">${Object.entries(CRITERIA).map(([k,c])=>`<option value="${k}" ${k===key?"selected":""}>${c.label}</option>`).join("")}</select></div><textarea id="proofText" class="answer-editor" style="min-height:280px">${text}</textarea><div class="editor-meta"><span id="proofWords">${countWords(text)} words</span><span>Your own text only</span></div><div class="save-bar"><button class="btn btn-primary" id="runProof">${icon("scan-search",14)} Run Proof Check</button></div></div><div id="proofOutput"></div></div>
+ <div class="review-layout"><div class="review-main"><div class="card answer-analysis"><div class="card-head"><div><h3>Check one answer</h3><span style="font-size:10px;color:var(--muted)">Structural evidence check — not an official Chevening score.</span></div></div><div style="display:flex;gap:9px;margin-bottom:10px"><select id="proofCriterion" style="border:1px solid var(--line);border-radius:10px;padding:9px 11px">${Object.entries(CRITERIA).map(([k,c])=>`<option value="${k}" ${k===key?"selected":""}>${c.label}</option>`).join("")}</select></div><textarea id="proofText" class="answer-editor" style="min-height:280px">${escapeHTML(text)}</textarea><div class="editor-meta"><span id="proofWords">${countWords(text)} words</span><span>Your own text only</span></div><div class="save-bar"><button class="btn btn-primary" id="runProof">${icon("scan-search",14)} Run Proof Check</button></div></div><div id="proofOutput"></div></div>
  <div class="stack"><div class="card list-card"><div class="card-head"><h3>Why this matters</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">A polished sentence can still contain weak evidence. The check looks for visible structural signals, then asks you to strengthen the missing evidence in your own words.</p></div><div class="card list-card"><div class="card-head"><h3>Next step</h3></div><a class="list-row" href="/app/comparison?criterion=${key}"><span class="row-icon">${icon("bar-chart-3",15)}</span><div><b>Winner Comparison</b><p>Compare the evidence structure with the Scholar methodology.</p></div><span class="arrow-btn">${icon("arrow-right",12)}</span></a></div></div></div>`,"proof-check");
  $("#proofText").addEventListener("input",e=>$("#proofWords").textContent=countWords(e.target.value)+" words");
  $("#proofCriterion").onchange=e=>{location.href="/app/proof-check?criterion="+e.target.value};
@@ -196,7 +196,7 @@ function renderStoryBank(){
  shell(`${pageHead("Story Bank","Your library of examples, achievements and leadership stories. Organise evidence before choosing what to write.",`<button class="btn btn-secondary" id="bestStoryBtn">${icon("sparkles",14)} Best Story Finder</button><button class="btn btn-primary" id="addStoryBtn">${icon("plus",14)} Add story</button>`)}
  <div class="grid-kpi">${kpi("library","Total stories",stories.length,stories.length?"Build breadth before choosing examples":"Start with your strongest experience")}${kpi("circle-check-big","Ready to use",stories.filter(x=>x.status==="Ready to use").length,"Strong and evidence-backed","green")}${kpi("triangle-alert","Needs evidence",stories.filter(x=>x.status!=="Ready to use").length,"Add a result, source or clearer role","gold")}${kpi("link","Used across criteria",new Set(stories.flatMap(x=>x.best)).size,"Reuse evidence strategically","purple")}</div>
  <div class="card table-card" style="margin-top:14px"><div class="table-tools"><div class="chips"><span class="chip active">All (${stories.length})</span><span class="chip">Leadership</span><span class="chip">Relationships</span><span class="chip">Course</span><span class="chip">Career</span></div><span style="font-size:10px;color:var(--muted)">Most recent</span></div>
- ${stories.length?`<table class="story-table"><thead><tr><th>Story</th><th>Theme</th><th>Strengths</th><th>Evidence signals</th><th>Best used for</th><th>Status</th><th></th></tr></thead><tbody>${stories.map((s,i)=>`<tr><td><div class="story-title"><span class="row-icon">${icon(i%2?"bar-chart-3":"users",15)}</span><div><b>${s.title}</b><p>${s.description}</p></div></div></td><td><span class="tag ${s.theme.includes("Career")?"purple":s.theme.includes("Relationship")?"gold":""}">${s.theme}</span></td><td>${s.strengths.map(x=>`<div style="margin:4px 0">• ${x}</div>`).join("")}</td><td>${s.evidence.length?s.evidence.map(x=>`<span class="tag">${x}</span>`).join(""):'<span style="color:var(--muted)">Add proof</span>'}</td><td>${s.best.map(x=>`<span class="tag">${x}</span>`).join("")}</td><td><span class="status-pill ${s.status==="Ready to use"?"good":"warn"}"><span class="dot"></span>${s.status}</span></td><td><button class="icon-btn">${icon("more-horizontal",14)}</button></td></tr>`).join("")}</tbody></table>`:`<div class="empty"><span class="row-icon">${icon("library",18)}</span><h3>No stories yet</h3><p>Add strong experiences before you lock the examples in your four answers.</p></div>`}
+ ${stories.length?`<table class="story-table"><thead><tr><th>Story</th><th>Theme</th><th>Strengths</th><th>Evidence signals</th><th>Best used for</th><th>Status</th><th></th></tr></thead><tbody>${stories.map((s,i)=>`<tr><td><div class="story-title"><span class="row-icon">${icon(i%2?"bar-chart-3":"users",15)}</span><div><b>${escapeHTML(s.title)}</b><p>${escapeHTML(s.description)}</p></div></div></td><td><span class="tag ${s.theme.includes("Career")?"purple":s.theme.includes("Relationship")?"gold":""}">${escapeHTML(s.theme)}</span></td><td>${s.strengths.map(x=>`<div style="margin:4px 0">• ${escapeHTML(x)}</div>`).join("")}</td><td>${s.evidence.length?s.evidence.map(x=>`<span class="tag">${escapeHTML(x)}</span>`).join(""):'<span style="color:var(--muted)">Add proof</span>'}</td><td>${s.best.map(x=>`<span class="tag">${escapeHTML(x)}</span>`).join("")}</td><td><span class="status-pill ${s.status==="Ready to use"?"good":"warn"}"><span class="dot"></span>${s.status}</span></td><td><button class="icon-btn">${icon("more-horizontal",14)}</button></td></tr>`).join("")}</tbody></table>`:`<div class="empty"><span class="row-icon">${icon("library",18)}</span><h3>No stories yet</h3><p>Add strong experiences before you lock the examples in your four answers.</p></div>`}
  </div>
  <div id="storyModal" class="modal-backdrop hidden"><div class="auth-form" style="background:#fff;padding:24px;border-radius:20px;max-width:520px"><div class="card-head"><h3>Add a story</h3><button id="closeStory" class="icon-btn">${icon("x",15)}</button></div><div class="field"><label>Story title</label><input id="storyTitle"></div><div class="field"><label>What happened?</label><textarea id="storyDesc" style="width:100%;min-height:120px;border:1px solid var(--line);border-radius:11px;padding:11px"></textarea></div><div class="field"><label>Theme</label><select id="storyTheme" style="width:100%;border:1px solid var(--line);border-radius:11px;padding:11px"><option>Leadership</option><option>Relationships</option><option>Career Impact</option><option>Course Choice</option></select></div><button class="btn btn-primary" style="width:100%" id="saveStory">Save story</button></div></div>`,"story-bank");
  $("#addStoryBtn").onclick=()=>$("#storyModal").classList.remove("hidden");$("#closeStory").onclick=()=>$("#storyModal").classList.add("hidden");
@@ -214,7 +214,7 @@ function renderComparison(){
  <div class="card comparison"><div class="card-head"><h3>Your answer vs. Scholar methodology</h3><span style="font-size:10px;color:var(--muted)">Structural comparison, not selection odds</span></div><div class="comparison-grid"><div>${a.signals.map((s,i)=>`<div class="comparison-row"><span>${s.label}</span><div class="progress"><span style="width:${s.hit?88:38}%"></span></div><b>${s.hit?"Visible":"Gap"}</b><span>${s.hit?"✓":"!"}</span></div>`).join("")}</div><div class="radar-box"><div class="radar"></div><span style="font-size:9px;color:var(--muted)">Closest pattern: ${key==="leadership"?"Stakeholder influence":key==="relationships"?"Professional network building":key==="course"?"Capability gap → programme fit":"Career progression → home-country impact"}</span></div></div></div>
  <div class="callout"><span class="row-icon">${icon("lightbulb",15)}</span><div><b>Suggested next question</b><p>${a.question}</p></div></div></div>
  <div class="stack"><div class="card list-card"><div class="card-head"><h3>Answer details</h3></div><div class="list-row"><div><b>Status</b><p>${a.status}</p></div></div><div class="list-row"><div><b>Word count</b><p>${countWords(example)} words</p></div></div><div class="list-row"><div><b>Visible signals</b><p>${a.good.length}/5</p></div></div></div>
- <div class="card list-card"><div class="card-head"><h3>Relevant stories</h3><a href="/app/story-bank">Browse all →</a></div>${getStories().slice(0,2).map(s=>`<div class="list-row"><span class="row-icon">${icon("library",15)}</span><div><b>${s.title}</b><p>${s.theme}</p></div></div>`).join("")}</div>
+ <div class="card list-card"><div class="card-head"><h3>Relevant stories</h3><a href="/app/story-bank">Browse all →</a></div>${getStories().slice(0,2).map(s=>`<div class="list-row"><span class="row-icon">${icon("library",15)}</span><div><b>${escapeHTML(s.title)}</b><p>${escapeHTML(s.theme)}</p></div></div>`).join("")}</div>
  <div class="card list-card"><div class="card-head"><h3>Source labels</h3></div><div class="list-row"><span class="row-icon green">${icon("shield-check",15)}</span><div><b>Official criterion</b><p>Current public Chevening guidance.</p></div></div><div class="list-row"><span class="row-icon gold">${icon("crown",15)}</span><div><b>Scholar methodology</b><p>Methodology layer. Real anonymised examples are labelled separately when permissioned.</p></div></div></div></div></div>`,"comparison");
 }
 
@@ -266,7 +266,7 @@ function renderResources(){
 function renderSettings(){
  shell(`${pageHead("Settings","Account, privacy and data controls.",state.demo?`<a class="btn btn-primary" href="/login">Create account</a>`:`<button class="btn btn-danger" id="signOut">${icon("log-out",14)} Sign out</button>`)}
  <div class="two-col">
-  <div class="card list-card"><div class="card-head"><h3>Account</h3></div><div class="list-row"><div><b>Name</b><p>${displayName()}</p></div></div><div class="list-row"><div><b>Email</b><p>${state.user?.email||"Demo preview"}</p></div></div><div class="list-row"><div><b>Plan</b><p>${state.profile?.plan||"Free"}</p></div></div><div class="list-row"><div><b>Legal</b><p><a href="/privacy" target="_blank" style="color:var(--blue)">Privacy</a> · <a href="/terms" target="_blank" style="color:var(--blue)">Terms</a></p></div></div></div>
+  <div class="card list-card"><div class="card-head"><h3>Account</h3></div><div class="list-row"><div><b>Name</b><p>${escapeHTML(displayName())}</p></div></div><div class="list-row"><div><b>Email</b><p>${escapeHTML(state.user?.email||"Demo preview")}</p></div></div><div class="list-row"><div><b>Plan</b><p>${state.profile?.plan||"Free"}</p></div></div><div class="list-row"><div><b>Legal</b><p><a href="/privacy" target="_blank" style="color:var(--blue)">Privacy</a> · <a href="/terms" target="_blank" style="color:var(--blue)">Terms</a></p></div></div></div>
   <div class="card list-card"><div class="card-head"><h3>Privacy principles</h3></div><div class="list-row"><span class="row-icon green">${icon("lock",15)}</span><div><b>Private application data</b><p>Authenticated application records are protected with Row Level Security.</p></div></div><div class="list-row"><span class="row-icon green">${icon("shield-check",15)}</span><div><b>No public raw Scholar applications</b><p>Permissioned source material remains in private knowledge tables and source types are labelled.</p></div></div><div class="list-row"><span class="row-icon gold">${icon("file-warning",15)}</span><div><b>Your own words</b><p>ShortlistProof diagnoses evidence and asks questions; it does not generate submission answers.</p></div></div></div>
  </div>
  ${state.demo?"":`<div class="card list-card" style="margin-top:14px;border-color:#f0cdd0"><div class="card-head"><h3>Application data</h3></div><p style="font-size:11px;color:var(--muted)">Delete this application workspace, including saved answers, Story Bank, course/career context, benchmarks and uploaded PDF. This cannot be undone.</p><button class="btn btn-danger" id="clearApplication">${icon("trash-2",14)} Delete application data</button></div>`}
@@ -378,24 +378,33 @@ async function saveStory(title,description,theme){
 }
 function escapeHTML(s){return(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
+function renderFatal(message){
+ root.innerHTML=`<div class="auth-screen"><section class="auth-brand"><div><a class="side-brand" href="/" style="color:#fff;padding:0"><span class="brand-mark" style="background:rgba(255,255,255,.15)">${icon("layers",18)}</span><span>ShortlistProof</span></a><h1>We couldn’t load your workspace.</h1><p>Your saved data has not been changed. Try again, or return to the public site.</p></div></section><section class="auth-form-wrap"><div class="auth-form"><h2>Something went wrong</h2><p>${escapeHTML(message||"Please try again.")}</p><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="location.reload()">Try again</button><a class="btn btn-secondary" href="/">Back to site</a></div></div></section></div>`;refreshIcons();
+}
 async function init(){
  state.route=routeFromPath();
- if(state.route==="login"){
-   const {data:{session}}=await sb.auth.getSession();
-   if(q.get("recovery")==="1"&&session){renderRecovery();return}
-   if(session){location.replace("/app");return}
-   renderAuth();return
+ root.innerHTML=`<div class="empty" style="min-height:100vh;display:grid;place-items:center"><div><span class="row-icon" style="margin:auto">${icon("loader-circle",18)}</span><p>Loading ShortlistProof…</p></div></div>`;refreshIcons();
+ try{
+  if(state.route==="login"){
+    const {data:{session}}=await sb.auth.getSession();
+    if(q.get("recovery")==="1"&&session){renderRecovery();return}
+    if(session){location.replace("/app");return}
+    renderAuth();return
+  }
+  await ensureData();
+  if(!state.demo&&!state.user){location.replace("/login");return}
+  if(state.route==="dashboard")renderDashboard();
+  if(state.route==="application")renderApplication();
+  if(state.route==="proof-check")renderProofCheck();
+  if(state.route==="comparison")renderComparison();
+  if(state.route==="story-bank")renderStoryBank();
+  if(state.route==="whole-case")renderWholeCase();
+  if(state.route==="final-proof")renderFinalProof();
+  if(state.route==="resources")renderResources();
+  if(state.route==="settings")renderSettings();
+ }catch(err){
+  console.error(err);renderFatal("The portal could not load. Please retry.");
  }
- await ensureData();
- if(!state.demo&&!state.user){location.replace("/login");return}
- if(state.route==="dashboard")renderDashboard();
- if(state.route==="application")renderApplication();
- if(state.route==="proof-check")renderProofCheck();
- if(state.route==="comparison")renderComparison();
- if(state.route==="story-bank")renderStoryBank();
- if(state.route==="whole-case")renderWholeCase();
- if(state.route==="final-proof")renderFinalProof();
- if(state.route==="resources")renderResources();
- if(state.route==="settings")renderSettings();
 }
+window.addEventListener("unhandledrejection",e=>console.error("Unhandled promise rejection",e.reason));
 init();
