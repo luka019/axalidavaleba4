@@ -1,4 +1,7 @@
 module.exports=function handler(req,res){
+  const host=req.headers["x-forwarded-host"]||req.headers.host||"axalidavaleba4.vercel.app";
+  const proto=req.headers["x-forwarded-proto"]||"https";
+  const origin=`${proto}://${host}`;
   res.setHeader("Content-Type","text/html; charset=utf-8");
   res.setHeader("Cache-Control","public, max-age=0, must-revalidate");
   res.status(200).send(`<!doctype html>
@@ -12,7 +15,7 @@ module.exports=function handler(req,res){
 <meta property="og:type" content="website">
 <meta property="og:title" content="ShortlistProof — See what your application proves">
 <meta property="og:description" content="A structured evidence workspace for self-written Chevening applications.">
-<meta property="og:url" content="https://axalidavaleba4.vercel.app/">
+<meta property="og:url" content="${origin}/">\n<link rel="canonical" href="${origin}/">
 <meta name="twitter:card" content="summary">
 <title>ShortlistProof — See what your application proves</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
