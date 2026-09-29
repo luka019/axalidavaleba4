@@ -1,7 +1,7 @@
 
 const SUPABASE_URL="https://gqbzaiqppyxweuxpbowl.supabase.co";
 const SUPABASE_KEY="sb_publishable_eYWPVhKoOv97r6aKIwzRgQ_ZajBQvcs";
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const sb=window.supabase?.createClient?window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY):null;
 const DEADLINE=new Date("2026-10-06T11:00:00Z");
 const root=document.querySelector("#portal-root");
 const icon=(name,size=18)=>`<i data-lucide="${name}" style="width:${size}px;height:${size}px"></i>`;
@@ -415,6 +415,7 @@ async function init(){
  state.route=routeFromPath();
  root.innerHTML=`<div class="empty" style="min-height:100vh;display:grid;place-items:center"><div><span class="row-icon" style="margin:auto">${icon("loader-circle",18)}</span><p>Loading ShortlistProof…</p></div></div>`;refreshIcons();
  try{
+  if(!sb&&!state.demo){renderFatal("The secure data service is temporarily unavailable.");return}
   if(state.route==="login"){
     const {data:{session}}=await sb.auth.getSession();
     if(q.get("recovery")==="1"&&session){renderRecovery();return}
