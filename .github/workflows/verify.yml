@@ -8,17 +8,23 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      - name: Check JavaScript syntax
-        run: find api -name '*.js' -exec node --check '{}' \; && node --check portal.js && node --check landing.js
-      - name: Run release tests when present
-        run: if [ -f tests/release.cjs ]; then node tests/release.cjs; fi
+      - name: Build and verify source contracts
+        run: node tests/release.cjs
+      - name: Install pinned browser test tooling
+        run: python -m pip install playwright==1.57.0 && python -m playwright install --with-deps chromium
+      - name: Browser regression checks
+        run: python tests/browser.py
       - name: Package reviewable source
+        if: always()
         run: git archive HEAD -o release-source.tar
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
         with:
-          name: release-source
-          path: release-source.tar
+          name: release-review
+          path: |
+            release-source.tar
+            test-results/
           retention-days: 7

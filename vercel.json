@@ -1,63 +1,25 @@
 {
-  "rewrites": [
-    {
-      "source": "/",
-      "destination": "/api"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/api/robots"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap"
-    },
-    {
-      "source": "/app",
-      "destination": "/api/portal"
-    },
-    {
-      "source": "/app/:path*",
-      "destination": "/api/portal"
-    },
-    {
-      "source": "/login",
-      "destination": "/api/portal"
-    },
-    {
-      "source": "/privacy",
-      "destination": "/api/privacy"
-    },
-    {
-      "source": "/terms",
-      "destination": "/api/terms"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(), payment=()"
-        },
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' https://unpkg.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://gqbzaiqppyxweuxpbowl.supabase.co wss://gqbzaiqppyxweuxpbowl.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests"
-        }
-      ]
-    }
-  ]
+ "buildCommand":"node scripts/build.cjs",
+ "outputDirectory":".",
+ "rewrites":[
+  {"source":"/","destination":"/api"},
+  {"source":"/robots.txt","destination":"/api/robots"},
+  {"source":"/sitemap.xml","destination":"/api/sitemap"},
+  {"source":"/guides","destination":"/api/resources?page=guides"},
+  {"source":"/guides/:slug","destination":"/api/resources?page=guides&slug=:slug"},
+  {"source":"/methodology","destination":"/api/resources?page=methodology"},
+  {"source":"/help","destination":"/api/resources?page=help"},
+  {"source":"/auth/callback","destination":"/api/portal"},
+  {"source":"/app","destination":"/api/portal"},
+  {"source":"/app/:path*","destination":"/api/portal"},
+  {"source":"/login","destination":"/api/portal"},
+  {"source":"/privacy","destination":"/api/privacy"},
+  {"source":"/terms","destination":"/api/terms"}
+ ],
+ "headers":[{"source":"/(.*)","headers":[
+  {"key":"X-Content-Type-Options","value":"nosniff"},
+  {"key":"X-Frame-Options","value":"DENY"},
+  {"key":"Referrer-Policy","value":"strict-origin-when-cross-origin"},
+  {"key":"Permissions-Policy","value":"camera=(), microphone=(), geolocation=(), payment=()"}
+ ]}]
 }
