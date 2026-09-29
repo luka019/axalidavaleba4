@@ -133,10 +133,10 @@ app.innerHTML=`
     <div class="editorial-head"><div><div class="kicker">The method</div><h2>Less “AI opinion”. More transparent reasoning.</h2></div><p>A useful result should tell you why it is saying something. ShortlistProof separates the source of the judgment instead of hiding everything behind a mysterious score.</p></div>
     <div class="method-line">
       <article class="method-piece"><small>1 · Official guidance</small><h3>What is being assessed?</h3><p>Current public Chevening guidance comes first: leadership and influence, professional relationships, course choice and career planning.</p></article>
-      <article class="method-piece"><small>2 · Scholar methodology</small><h3>What does convincing evidence make visible?</h3><p>We model structure and decision-making from verified or permissioned Scholar material and clearly label reconstructed patterns separately.</p></article>
+      <article class="method-piece"><small>2 · Evidence methodology</small><h3>What does convincing evidence make visible?</h3><p>The live checker uses explicit structural evidence rules alongside official Chevening criteria. Permissioned Scholar material is added only after verification and is labelled by source type.</p></article>
       <article class="method-piece"><small>3 · Your application</small><h3>What does your page actually prove?</h3><p>Your experience is mapped against that structure without replacing your voice or writing the answer for you.</p></article>
     </div>
-    <div class="method-sum">Official criteria + Scholar methodology + your evidence → a clearer next decision.</div>
+    <div class="method-sum">Official criteria + structured evidence methodology + your evidence → a clearer next decision.</div>
   </div>
 </section>
 
@@ -188,7 +188,7 @@ app.innerHTML=`
     <div class="editorial-head"><div><div class="kicker">Pricing</div><h2>Start with one honest check.</h2></div><p>No subscription. Use the free check first. Pay only if reading the whole application together would actually help.</p></div>
     <div class="pricing-grid">
       <div class="price-card"><h3>Free Proof Check</h3><div class="price">£0</div><ul class="price-list"><li>${icon("check",14)} One self-written answer</li><li>${icon("check",14)} What already works</li><li>${icon("check",14)} Main evidence gap</li><li>${icon("check",14)} One question to answer next</li><li>${icon("check",14)} Privacy-safe share result</li></ul><a class="btn btn-secondary" href="#check">Check one answer</a></div>
-      <div class="price-card featured"><h3>Full ShortlistProof</h3><div class="price"><span id="paidPrice">£39</span> <small id="paidPriceNote">one-time · one application cycle</small></div><ul class="price-list"><li>${icon("check",14)} All four core answers</li><li>${icon("check",14)} Story Bank & Best Story Finder</li><li>${icon("check",14)} Scholar-method comparison</li><li>${icon("check",14)} Whole Case review</li><li>${icon("check",14)} Re-checks & Final Proof</li></ul><button class="btn btn-primary" id="unlockBtn">Check my full application</button></div>
+      <div class="price-card featured"><h3>Full ShortlistProof</h3><div class="price"><span id="paidPrice">£39</span> <small id="paidPriceNote">one-time · one application cycle</small></div><ul class="price-list"><li>${icon("check",14)} All four core answers</li><li>${icon("check",14)} Story Bank & Best Story Finder</li><li>${icon("check",14)} Structured method comparison</li><li>${icon("check",14)} Whole Case review</li><li>${icon("check",14)} Re-checks & Final Proof</li></ul><button class="btn btn-primary" id="unlockBtn">Check my full application</button></div>
     </div>
   </div>
 </section>
@@ -198,7 +198,7 @@ app.innerHTML=`
     <div class="kicker">A few clear answers</div>
     <div class="faq-item"><h4>Will ShortlistProof write my application for me?</h4><p>No. It identifies evidence and structure issues, then asks questions that help you improve your own answer.</p></div>
     <div class="faq-item"><h4>Is ShortlistProof part of Chevening?</h4><p>No. It is an independent product. It is not affiliated with or endorsed by Chevening, the UK Government, FCDO or any university.</p></div>
-    <div class="faq-item"><h4>Are successful applications shown to users?</h4><p>No raw application is exposed by default. Real anonymised material is used only with appropriate permission and is clearly labelled. Reconstructed patterns are labelled separately.</p></div>
+    <div class="faq-item"><h4>Are successful applications shown to users?</h4><p>No raw application is exposed. If permissioned Scholar material is added to the methodology, it is verified, anonymised where appropriate and clearly labelled by source type. Reconstructed or illustrative patterns are labelled separately.</p></div>
     <div class="faq-item"><h4>Does it predict whether I will win?</h4><p>No. It does not estimate selection odds. It helps you understand what your application currently makes visible.</p></div>
   </div>
 </section>
