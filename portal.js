@@ -86,7 +86,7 @@ function kpi(iconName,label,value,note,cls="",pct=null){return`<div class="card 
 function renderDashboard(){
  const c=completion(),d=deadlineParts(),stories=state.stories.length||DEMO_STORIES.length;
  const actions=`<a class="btn btn-secondary" href="/app/proof-check">${icon("scan-search",15)} Run Proof Check</a><a class="btn btn-primary" href="/app/application">Continue application ${icon("arrow-right",14)}</a>`;
- shell(`${pageHead("Welcome back, "+displayName()+"!","Your application progress and next best actions towards a stronger Chevening submission.",actions)}
+ shell(`${pageHead("Your application overview","See what is complete, what still needs evidence, and the single best next action before submission.",actions)}
  <div class="grid-kpi">${kpi("file-text","Application progress",c.progress+"%","${c.answered}/4 core answers added","",c.progress)}${kpi("target","Criteria coverage",c.visible+"/"+c.total,"Evidence signals currently visible","green",Math.round(c.visible/c.total*100))}${kpi("star","Evidence strength",c.visible>=16?"Strong":c.visible>=11?"Developing":"Needs work","Structural evidence only — not a selection score","gold")}${kpi("clock","Deadline readiness",d.d<=2?"Urgent":"On track",d.d+" days remaining","purple",Math.max(6,100-Math.min(100,d.d*5)))} </div>
  <div class="dashboard-grid"><div class="stack">
   <div class="card journey"><div class="card-head"><div><h3>Your application journey</h3><span style="font-size:10px;color:var(--muted)">Track each stage without losing the bigger story.</span></div></div><div class="steps">${[
@@ -235,7 +235,7 @@ function renderAuth(){
 }
 
 async function ensureData(){
- if(state.demo){state.profile={display_name:"Mariam K.",plan:"full"};state.answers={};state.stories=[];return}
+ if(state.demo){state.profile={display_name:"Applicant",plan:"full"};state.answers={};state.stories=[];return}
  const {data:{session}}=await sb.auth.getSession();state.session=session;state.user=session?.user||null;if(!state.user)return;
  let {data:profile}=await sb.from("users").select("*").eq("id",state.user.id).maybeSingle();
  if(!profile){await sb.from("users").insert({id:state.user.id,display_name:state.user.user_metadata?.display_name||state.user.email.split("@")[0]});const r=await sb.from("users").select("*").eq("id",state.user.id).maybeSingle();profile=r.data}
