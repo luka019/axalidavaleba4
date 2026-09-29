@@ -23,15 +23,57 @@ app.innerHTML=`
     <div>
       <div class="kicker">Independent support for Chevening applicants</div>
       <h1>You know you’re a strong candidate. <em>Does your application prove it?</em></h1>
-      <p class="hero-copy">ShortlistProof helps you see your own application the way a reader sees it: what is clear, what is still missing, and whether the example you chose is really doing the work you think it is.</p>
+      <p class="hero-copy">ShortlistProof helps you see your application the way a real reader sees it — then gives you one clear next step. Keep your answers, strongest experiences, evidence gaps and final checks together in one calm workspace.</p>
       <div class="hero-actions"><a class="btn btn-primary" href="#check">Check one answer — free ${icon("arrow-right",14)}</a><a class="btn btn-secondary" href="/app?demo=1">See the applicant portal</a></div>
       <div class="plain-trust"><span>${icon("shield-check",15)} Your story stays yours</span><span>${icon("file-check-2",15)} No AI-written submission text</span><span>${icon("badge-check",15)} Official criteria first</span></div>
     </div>
-    <aside class="human-panel">
-      <div class="human-label">A familiar applicant moment</div>
-      <div class="human-question">“I know what I meant. But is it actually visible on the page?”</div>
-      <div class="paper-answer">I led a cross-functional project and coordinated the team through a difficult implementation. <mark>We delivered the project successfully</mark> and improved the process for the organisation.</div>
-      <div class="margin-note"><strong>The issue may not be the writing.</strong><span>You show responsibility and delivery. What is still unclear is who you influenced, what changed because of you, and how the result can be observed.</span></div>
+    <aside class="hero-product" aria-label="ShortlistProof applicant dashboard preview">
+      <div class="product-window">
+        <div class="product-top">
+          <div class="product-dots"><span></span><span></span><span></span></div>
+          <div class="product-title">Applicant Portal</div>
+          <div class="product-user">MK</div>
+        </div>
+        <div class="product-body">
+          <div class="mini-sidebar">
+            <div class="mini-brand"><span class="mini-logo"><i data-lucide="layers"></i></span>ShortlistProof</div>
+            <div class="mini-nav active"><i data-lucide="layout-dashboard"></i> Today</div>
+            <div class="mini-nav"><i data-lucide="file-text"></i> My application</div>
+            <div class="mini-nav"><i data-lucide="scan-search"></i> Proof checks</div>
+            <div class="mini-nav"><i data-lucide="library"></i> Story Bank</div>
+            <div class="mini-nav"><i data-lucide="waypoints"></i> Whole Case</div>
+            <div class="mini-nav"><i data-lucide="badge-check"></i> Final Proof</div>
+          </div>
+          <div class="mini-main">
+            <div class="mini-welcome"><div><small>GOOD AFTERNOON</small><h3>Mariam, here’s what matters next.</h3></div><span class="mini-deadline">4 days left</span></div>
+            <div class="mini-metrics">
+              <div><span>Application</span><b>78%</b><i><u style="width:78%"></u></i></div>
+              <div><span>Evidence coverage</span><b>14/20</b><i><u style="width:70%"></u></i></div>
+              <div><span>Story Bank</span><b>12</b><small>experiences saved</small></div>
+            </div>
+            <div class="mini-next">
+              <div class="mini-next-icon"><i data-lucide="lightbulb"></i></div>
+              <div><small>YOUR NEXT BEST ACTION</small><b>Make the influence in your leadership example visible.</b><p>You show ownership and outcome. What is still unclear is whose decision changed because of you.</p></div>
+              <span><i data-lucide="arrow-right"></i></span>
+            </div>
+            <div class="mini-grid">
+              <div class="mini-card">
+                <div class="mini-card-head"><b>Your application</b><span>View all</span></div>
+                <div class="mini-row"><em class="ok">✓</em><span><b>Leadership & influence</b><small>One gap left: influence</small></span><strong>Review</strong></div>
+                <div class="mini-row"><em class="ok">✓</em><span><b>Professional relationships</b><small>Core evidence visible</small></span><strong>Strong</strong></div>
+                <div class="mini-row"><em class="warn">!</em><span><b>Course choice</b><small>Course → career bridge</small></span><strong>Fix</strong></div>
+                <div class="mini-row"><em>•</em><span><b>Career plan</b><small>Ready for first check</small></span><strong>Check</strong></div>
+              </div>
+              <div class="mini-card">
+                <div class="mini-card-head"><b>Story Bank</b><span>12 stories</span></div>
+                <div class="story-chip"><span></span><div><b>Contract automation rollout</b><small>Strong result · Leadership</small></div></div>
+                <div class="story-chip"><span></span><div><b>Policy workshop</b><small>Stakeholder evidence · Relationships</small></div></div>
+                <div class="mini-human-note">“Don’t rewrite everything. Fix the evidence that changes the answer most.”</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </aside>
   </div>
 </section>
