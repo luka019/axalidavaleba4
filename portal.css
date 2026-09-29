@@ -45,3 +45,18 @@
 /* Production forms and account flows */
 .context-card{overflow:hidden}.context-sub{display:block;color:var(--muted);font-size:9px;margin-top:3px}.upload-box{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px dashed #c7d6e5;background:#fafcfe;border-radius:13px;padding:12px}.upload-box b{display:block;font-size:11px}.upload-box p{margin:3px 0 0;color:var(--muted);font-size:9px}.upload-btn{position:relative;overflow:hidden;white-space:nowrap}.upload-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}.context-help{display:flex;gap:6px;align-items:center;color:#77879d;font-size:9px;margin-top:8px}.mini-field{display:block;color:#52617e;font-size:9px;font-weight:800;margin:10px 0}.mini-field>span{float:right;color:#95a1b1;font-weight:500}.mini-field input,.mini-field textarea{width:100%;margin-top:5px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px 10px;color:var(--ink);outline:0;resize:vertical}.mini-field input:focus,.mini-field textarea:focus{border-color:#8aadd1;box-shadow:0 0 0 3px rgba(11,78,162,.06)}.auth-extra{text-align:right;margin-top:-5px}.auth-extra button{border:0;background:transparent;color:var(--blue);font-size:10px;font-weight:800;cursor:pointer;padding:0}.auth-legal{margin-top:16px;color:#8794a7;font-size:9px;line-height:1.5;text-align:center}.auth-legal a{color:var(--blue);font-weight:700}
 @media(max-width:520px){.upload-box{grid-template-columns:34px 1fr}.upload-btn{grid-column:1/-1;width:100%}}
+
+/* Paid entitlement */
+.nav-lock{margin-left:auto;display:grid;place-items:center;color:#9aa8bb}
+.upgrade-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:24px;padding:28px;align-items:start}
+.upgrade-copy h2{font:700 clamp(30px,4vw,46px)/1.08 "Source Serif 4",Georgia,serif;margin:8px 0 10px;color:var(--navy)}
+.upgrade-copy p{color:var(--muted);max-width:620px;line-height:1.65}
+.upgrade-price{font-size:34px;font-weight:800;color:var(--navy);margin-top:18px}
+.upgrade-price small{font-size:11px;font-weight:700;color:var(--muted)}
+.upgrade-features{display:grid;gap:8px}
+.upgrade-feature{display:flex;align-items:center;gap:9px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 11px;font-size:11px}
+.upgrade-actions{grid-column:1/-1;border-top:1px solid var(--line);padding-top:16px}
+.sandbox-note{font-size:9px;color:var(--muted);margin:7px 0 0}
+.sandbox-pay-card{background:#fffaf0;border-color:#ecd9a9!important}
+.success-callout{border-color:#b9dfc9;background:#f2fbf6}
+@media(max-width:760px){.upgrade-card{grid-template-columns:1fr;padding:20px}.upgrade-actions{grid-column:auto}}
