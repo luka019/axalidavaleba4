@@ -140,7 +140,7 @@ function renderDashboard(){
   <div class="card list-card"><div class="card-head"><h3>Story Bank status</h3><a href="/app/story-bank">Open Story Bank →</a></div><div style="display:flex;gap:18px;align-items:center;padding:10px 0"><span class="row-icon" style="width:50px;height:50px">${icon("database",24)}</span><div><b style="font-size:32px;color:var(--navy)">${stories}</b><p style="margin:0;color:var(--muted);font-size:10px">stories saved</p></div><div style="margin-left:auto;text-align:right"><b style="color:var(--green)">${Math.max(0,stories-1)}</b><p style="margin:0;color:var(--muted);font-size:10px">with evidence</p></div></div><div class="callout"><span class="row-icon">${icon("lightbulb",15)}</span><div><b>Use the Story Bank before rewriting.</b><p>A stronger example can solve a weak answer faster than polishing weak evidence.</p></div></div></div></div>
  </div><div class="stack">
   <div class="card deadline-card"><div class="card-head"><h3>Time to deadline</h3>${icon("calendar-clock",17)}</div><div class="countdown"><div class="count-box"><strong>${d.d}</strong><span>Days</span></div><div class="count-box"><strong>${d.h}</strong><span>Hours</span></div><div class="count-box"><strong>${d.m}</strong><span>Minutes</span></div></div><a class="btn btn-primary" style="width:100%" href="/app/application">Continue my application ${icon("arrow-right",14)}</a></div>
-  <div class="card quick-card"><div class="card-head"><h3>Quick links</h3></div>${[["file-text","My Application","/app/application"],["circle-check-big","Run Proof Check","/app/proof-check"],["bar-chart-3","Compare with Scholar method","/app/comparison"],["book-open","Official resources","/app/resources"]].map(x=>`<a class="list-row" href="${x[2]}"><span class="row-icon">${icon(x[0],15)}</span><div><b>${x[1]}</b></div><span class="arrow-btn">${icon("chevron-right",12)}</span></a>`).join("")}</div>
+  <div class="card quick-card"><div class="card-head"><h3>Quick links</h3></div>${[["file-text","My Application","/app/application"],["circle-check-big","Run Proof Check","/app/proof-check"],["bar-chart-3","Compare with evidence method","/app/comparison"],["book-open","Official resources","/app/resources"]].map(x=>`<a class="list-row" href="${x[2]}"><span class="row-icon">${icon(x[0],15)}</span><div><b>${x[1]}</b></div><span class="arrow-btn">${icon("chevron-right",12)}</span></a>`).join("")}</div>
  </div></div>`,"dashboard");
 }
 
@@ -188,7 +188,7 @@ function renderApplication(){
     <button class="btn btn-secondary" id="saveContext">${icon("save",14)} Save context</button>
    </div>
    <div class="card list-card"><div class="card-head"><h3>What Chevening is testing</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">${CRITERIA[active].official}</p></div>
-   <div class="card list-card"><div class="card-head"><h3>Scholar method</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">${CRITERIA[active].method}</p></div>
+   <div class="card list-card"><div class="card-head"><h3>Evidence method</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">${CRITERIA[active].method}</p></div>
   </div>
  </div>`,"application");
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{location.href="/app/application?criterion="+b.dataset.tab});
@@ -224,7 +224,7 @@ function renderProofOutput(key,text){
  <div class="analysis-card good"><h4>What already works</h4><ul>${a.good.map(x=>`<li>${x.label}</li>`).join("")||"<li>No major signal is explicit yet.</li>"}</ul></div>
  <div class="analysis-card warn"><h4>What is missing</h4><ul>${a.missing.map(x=>`<li>${x.label}</li>`).join("")||"<li>No major structural signal is missing.</li>"}</ul></div>
  <div class="analysis-card"><h4>Official criterion</h4><p>${a.c.official}</p></div>
- <div class="analysis-card"><h4>Scholar method</h4><p>${a.c.method}</p></div></div>
+ <div class="analysis-card"><h4>Evidence method</h4><p>${a.c.method}</p></div></div>
  <div class="callout" style="margin-top:12px"><span class="row-icon">${icon("lightbulb",15)}</span><div><b>Fix My Gap</b><p>${a.question}</p></div><a class="btn btn-secondary" style="margin-left:auto" href="/app/comparison?criterion=${key}">Compare method</a></div></div>`;refreshIcons();
 }
 
