@@ -37,7 +37,7 @@ const CRITERIA={
  course:{label:"Course Choice",official:"Chevening asks you to focus on the first-choice course and explain how it connects to your background, career aspirations and intended impact, including specific modules or areas of study.",method:"Strong course logic follows: capability gap → specific programme feature → skill gained → future use.",signals:[["Capability gap",/\b(gap|lack|need to develop|need to strengthen|capability|skill|knowledge|ability)\b/i],["Course specificity",/\b(module|programme|program|course|professor|centre|center|clinic|curriculum|research)\b/i],["Gap → course link",/\b(because|therefore|will enable|will allow|will equip|so that|directly|addresses)\b/i],["Choice rationale",/\b(first choice|chosen|selected|unique|specifically|particularly|because its)\b/i],["Future use",/\b(career|return|future|goal|impact|apply|implement|home|Georgia)\b/i]],priority:["Course specificity","Capability gap","Gap → course link","Future use"],questions:{"Course specificity":"Which specific module, centre, teaching feature or academic strength directly addresses your capability gap?","Capability gap":"What can you not yet do well enough that this programme needs to solve?","Gap → course link":"How will this specific programme feature close the gap you identified?","Future use":"What will you do differently in your first role after returning because of this course?"}},
  career:{label:"Career Plan",official:"Chevening asks for a clear, realistic short-, mid- and long-term career plan with measurable goals and positive impact.",method:"Strong career evidence reads as a credible sequence: first step → 3–5 year bridge → long-term impact, with observable milestones.",signals:[["Short-term step",/\b(immediately|upon return|first year|1 year|short-term|short term|returning home)\b/i],["3–5 year bridge",/\b(3|three|4|four|5|five).{0,15}(year|years)|mid-term|medium-term|medium term/i],["Long-term direction",/\b(long-term|long term|10 year|ten year|ultimately|eventually|in the long term)\b/i],["Measurable milestone",/\b(\d+|target|measure|launch|establish|lead|build|create|increase|reduce|train)\b/i],["Home-country impact",/\b(home country|community|sector|national|public|society|impact|return|Georgia)\b/i]],priority:["3–5 year bridge","Short-term step","Measurable milestone","Home-country impact"],questions:{"3–5 year bridge":"What role, responsibility or milestone should you realistically reach in years 3–5 that bridges your first step and long-term ambition?","Short-term step":"What exact role or responsibility will you pursue immediately after returning?","Measurable milestone":"What observable result would show that this career step has been achieved?","Home-country impact":"Who in your home country benefits from this plan, and what changes for them?"}}
 };
-const state={session:null,user:null,profile:null,application:null,answers:{},stories:[],demo:isDemo,route:"dashboard"};
+const state={session:null,user:null,profile:null,application:null,answers:{},stories:[],course:null,careerGoals:{},demo:isDemo,route:"dashboard"};
 const $=s=>document.querySelector(s);
 
 function analyse(key,text){
@@ -122,14 +122,50 @@ function renderDashboard(){
 function renderApplication(){
  let active=q.get("criterion")||"leadership";if(!CRITERIA[active])active="leadership";
  const tabs=Object.entries(CRITERIA).map(([k,c])=>`<button class="answer-tab ${k===active?"active":""}" data-tab="${k}"><b>${c.label}</b><span>${countWords(answerText(k))} words</span></button>`).join("");
- shell(`${pageHead("My Application","Keep the four Chevening answers in one place so ShortlistProof can read them as one candidate narrative.",`<a class="btn btn-secondary" href="/app/whole-case">${icon("waypoints",15)} Whole Case</a><a class="btn btn-primary" href="/app/proof-check?criterion=${active}">Run Proof Check ${icon("arrow-right",14)}</a>`)}
- <div class="application-grid"><div class="card answer-card"><div class="answer-tabs">${tabs}</div><div class="card-head"><div><h3 id="answerTitle">${CRITERIA[active].label}</h3><span style="font-size:10px;color:var(--muted)">Write and edit your own answer. ShortlistProof does not generate it for you.</span></div></div><textarea id="answerEditor" class="answer-editor" placeholder="Add your self-written answer...">${state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:"")}</textarea><div class="editor-meta"><span id="editorWords">${countWords(state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:""))} words</span><span>Saved privately to your account when signed in</span></div><div class="save-bar"><a class="btn btn-secondary" id="checkCurrent" href="/app/proof-check?criterion=${active}">Check this answer</a><button class="btn btn-primary" id="saveAnswer">${icon("save",14)} Save answer</button></div></div>
- <div class="stack"><div class="card list-card"><div class="card-head"><h3>What Chevening is testing</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">${CRITERIA[active].official}</p></div><div class="card list-card"><div class="card-head"><h3>Scholar method</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">${CRITERIA[active].method}</p></div><div class="card list-card"><div class="card-head"><h3>Relevant Story Bank</h3><a href="/app/story-bank">Browse all →</a></div>${getStories().slice(0,3).map(s=>`<div class="list-row"><span class="row-icon">${icon("library",15)}</span><div><b>${s.title}</b><p>${s.theme}</p></div></div>`).join("")}</div></div></div>`,"application");
+ const course=state.course||{},goals=state.careerGoals||{};
+ const sourceLabel=state.application?.source_file_path?"PDF saved privately":"No CV/LinkedIn PDF added";
+ shell(`${pageHead("My Application","Keep the evidence, course context, career direction and four self-written answers in one place.",`<a class="btn btn-secondary" href="/app/whole-case">${icon("waypoints",15)} Whole Case</a><a class="btn btn-primary" href="/app/proof-check?criterion=${active}">Run Proof Check ${icon("arrow-right",14)}</a>`)}
+ <div class="application-grid">
+  <div class="card answer-card">
+   <div class="answer-tabs">${tabs}</div>
+   <div class="card-head"><div><h3 id="answerTitle">${CRITERIA[active].label}</h3><span style="font-size:10px;color:var(--muted)">Write and edit your own answer. ShortlistProof does not generate submission text.</span></div></div>
+   <textarea id="answerEditor" class="answer-editor" maxlength="7000" placeholder="Add your self-written answer...">${state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:"")}</textarea>
+   <div class="editor-meta"><span id="editorWords">${countWords(state.answers[active]?.answer_text|| (state.demo?DEMO_ANSWERS[active]:""))} words</span><span>Saved privately when signed in</span></div>
+   <div class="save-bar"><a class="btn btn-secondary" id="checkCurrent" href="/app/proof-check?criterion=${active}">Check this answer</a><button class="btn btn-primary" id="saveAnswer">${icon("save",14)} Save answer</button></div>
+  </div>
+  <div class="stack">
+   <div class="card list-card context-card">
+    <div class="card-head"><div><h3>Evidence source</h3><span class="context-sub">Optional, but useful for Story Bank and evidence mapping.</span></div></div>
+    <div class="upload-box">
+      <span class="row-icon">${icon("file-up",16)}</span>
+      <div><b>CV or LinkedIn PDF</b><p id="sourceFileStatus">${sourceLabel}</p></div>
+      <label class="btn btn-secondary upload-btn">Choose PDF<input id="sourceFile" type="file" accept="application/pdf"></label>
+    </div>
+    <div class="context-help">${icon("shield-check",13)} Private bucket · PDF only · maximum 10 MB.</div>
+   </div>
+   <div class="card list-card context-card">
+    <div class="card-head"><div><h3>First-choice course</h3><span class="context-sub">This context helps test course → capability → career logic.</span></div></div>
+    <label class="mini-field">University<input id="courseInstitution" maxlength="180" placeholder="University name" value="${escapeHTML(course.institution||"")}"></label>
+    <label class="mini-field">Programme<input id="courseProgramme" maxlength="220" placeholder="Programme name" value="${escapeHTML(course.programme||"")}"></label>
+    <label class="mini-field">Relevant modules <span>comma-separated</span><input id="courseModules" maxlength="600" placeholder="Module 1, Module 2" value="${escapeHTML((course.modules||[]).join(", "))}"></label>
+   </div>
+   <div class="card list-card context-card">
+    <div class="card-head"><div><h3>Career direction</h3><span class="context-sub">Keep the sequence visible before you assess the career answer.</span></div></div>
+    <label class="mini-field">Short term<textarea id="goalShort" rows="2" maxlength="1200" placeholder="Immediately after returning...">${escapeHTML(goals.short?.goal||"")}</textarea></label>
+    <label class="mini-field">3–5 years<textarea id="goalMid" rows="2" maxlength="1200" placeholder="The bridge to your longer-term goal...">${escapeHTML(goals.mid?.goal||"")}</textarea></label>
+    <label class="mini-field">Long term<textarea id="goalLong" rows="2" maxlength="1200" placeholder="The longer-term role or impact...">${escapeHTML(goals.long?.goal||"")}</textarea></label>
+    <button class="btn btn-secondary" id="saveContext">${icon("save",14)} Save context</button>
+   </div>
+   <div class="card list-card"><div class="card-head"><h3>What Chevening is testing</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">${CRITERIA[active].official}</p></div>
+   <div class="card list-card"><div class="card-head"><h3>Scholar method</h3></div><p style="font-size:11px;color:var(--muted);line-height:1.7">${CRITERIA[active].method}</p></div>
+  </div>
+ </div>`,"application");
  document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{location.href="/app/application?criterion="+b.dataset.tab});
  $("#answerEditor").addEventListener("input",e=>$("#editorWords").textContent=countWords(e.target.value)+" words");
- $("#saveAnswer").onclick=async()=>{await saveAnswer(active,$("#answerEditor").value);toast(state.demo?"Demo mode: sign in to save.":"Answer saved.");};
+ $("#saveAnswer").onclick=async()=>{await saveAnswer(active,$("#answerEditor").value);if(!state.demo)toast("Answer saved.");};
+ $("#saveContext").onclick=()=>saveApplicationContext();
+ $("#sourceFile").onchange=e=>uploadSourceFile(e.target.files?.[0]);
 }
-
 function renderProofCheck(){
  let key=q.get("criterion")||"leadership";if(!CRITERIA[key])key="leadership";
  const text=state.answers[key]?.answer_text||(state.demo?DEMO_ANSWERS[key]:"");
@@ -242,7 +278,13 @@ function renderAuth(){
 }
 
 async function ensureData(){
- if(state.demo){state.profile={display_name:"Applicant",plan:"full"};state.answers={};state.stories=[];return}
+ if(state.demo){
+   state.profile={display_name:"Applicant",plan:"full"};state.answers={};state.stories=[];
+   state.application={id:"demo",title:"My Chevening Application",source_file_path:null};
+   state.course={institution:"First-choice UK university",programme:"Master’s programme",modules:["Relevant module 1","Relevant module 2"],rationale:"The programme closes a specific capability gap and supports the next career step."};
+   state.careerGoals={short:{goal:"Return to a role where the new capability can be applied immediately."},mid:{goal:"Move into a specialist leadership role within three to five years."},long:{goal:"Create wider home-country impact through sector or policy leadership."}};
+   return;
+ }
  const {data:{session}}=await sb.auth.getSession();state.session=session;state.user=session?.user||null;if(!state.user)return;
  let {data:profile}=await sb.from("users").select("*").eq("id",state.user.id).maybeSingle();
  if(!profile){await sb.from("users").insert({id:state.user.id,display_name:state.user.user_metadata?.display_name||state.user.email.split("@")[0]});const r=await sb.from("users").select("*").eq("id",state.user.id).maybeSingle();profile=r.data}
@@ -250,12 +292,57 @@ async function ensureData(){
  let {data:apps}=await sb.from("applications").select("*").eq("user_id",state.user.id).order("created_at",{ascending:true}).limit(1);
  if(!apps?.length){const r=await sb.from("applications").insert({user_id:state.user.id,title:"My Chevening Application"}).select().single();state.application=r.data}else state.application=apps[0];
  if(state.application){
-   const [{data:answers},{data:stories}]=await Promise.all([
+   const [{data:answers},{data:stories},{data:courses},{data:goals}]=await Promise.all([
     sb.from("answers").select("*").eq("application_id",state.application.id),
-    sb.from("experiences").select("*").eq("application_id",state.application.id).order("created_at",{ascending:false})
+    sb.from("experiences").select("*").eq("application_id",state.application.id).order("created_at",{ascending:false}),
+    sb.from("courses").select("*").eq("application_id",state.application.id).eq("preference_order",1).limit(1),
+    sb.from("career_goals").select("*").eq("application_id",state.application.id)
    ]);
-   state.answers=Object.fromEntries((answers||[]).map(a=>[a.criterion,a]));state.stories=stories||[];
+   state.answers=Object.fromEntries((answers||[]).map(a=>[a.criterion,a]));
+   state.stories=stories||[];
+   state.course=courses?.[0]||null;
+   state.careerGoals=Object.fromEntries((goals||[]).map(g=>[g.horizon,g]));
  }
+}
+async function uploadSourceFile(file){
+ if(!file)return;
+ if(state.demo)return toast("Sign in to upload your own file.");
+ if(!state.user||!state.application)return toast("Sign in to upload.");
+ if(file.type!=="application/pdf")return toast("Please choose a PDF file.");
+ if(file.size>10*1024*1024)return toast("PDF must be 10 MB or smaller.");
+ const safeName=(file.name||"application.pdf").replace(/[^a-zA-Z0-9._-]+/g,"-").slice(-100);
+ const path=`${state.user.id}/${state.application.id}/${Date.now()}-${safeName}`;
+ const status=$("#sourceFileStatus");if(status)status.textContent="Uploading…";
+ const up=await sb.storage.from("application-files").upload(path,file,{contentType:"application/pdf",upsert:false});
+ if(up.error){if(status)status.textContent="Upload failed";return toast("Could not upload this PDF.");}
+ const oldPath=state.application.source_file_path;
+ const save=await sb.from("applications").update({source_file_path:path,updated_at:new Date().toISOString()}).eq("id",state.application.id).select().single();
+ if(save.error){await sb.storage.from("application-files").remove([path]);if(status)status.textContent="Could not save file";return toast("Could not attach this PDF.");}
+ state.application=save.data;
+ if(oldPath&&oldPath!==path)await sb.storage.from("application-files").remove([oldPath]);
+ if(status)status.textContent="PDF saved privately";
+ toast("Evidence PDF saved.");
+}
+async function saveApplicationContext(){
+ if(state.demo)return toast("Sign in to save your own application context.");
+ if(!state.user||!state.application)return toast("Sign in to save.");
+ const institution=$("#courseInstitution").value.trim(),programme=$("#courseProgramme").value.trim();
+ const modules=$("#courseModules").value.split(",").map(x=>x.trim()).filter(Boolean).slice(0,20);
+ const tasks=[];
+ if(institution&&programme){
+  tasks.push(sb.from("courses").upsert({
+   user_id:state.user.id,application_id:state.application.id,preference_order:1,
+   institution,programme,modules,rationale:state.course?.rationale||null,updated_at:new Date().toISOString()
+  },{onConflict:"application_id,preference_order"}).select().single());
+ }
+ for(const [horizon,id] of [["short","goalShort"],["mid","goalMid"],["long","goalLong"]]){
+  const goal=$("#"+id).value.trim();if(goal)tasks.push(sb.from("career_goals").upsert({
+   user_id:state.user.id,application_id:state.application.id,horizon,goal,updated_at:new Date().toISOString()
+  },{onConflict:"application_id,horizon"}).select().single());
+ }
+ if(!tasks.length)return toast("Add course or career context first.");
+ const results=await Promise.all(tasks);if(results.some(x=>x.error))return toast("Some context could not be saved.");
+ await ensureData();toast("Application context saved.");
 }
 async function saveAnswer(criterion,text){
  if(state.demo)return;
