@@ -209,7 +209,7 @@ app.innerHTML=`
     <div class="footer-grid">
       <div><a class="brand" href="#top" style="color:#fff"><span class="brand-mark">${icon("layers",17)}</span>ShortlistProof</a><p>Independent application evidence support. Built to help applicants make clearer decisions about their own stories and evidence.</p></div>
       <div><strong>Product</strong><a href="#check">Free check</a><br><a href="/app?demo=1">Applicant portal</a><br><a href="#pricing">Pricing</a></div>
-      <div><strong>Useful links</strong><a href="https://www.chevening.org/resource-hub/guidance/application-criteria/" target="_blank" rel="noopener">Official application criteria</a><br><a href="https://www.chevening.org/" target="_blank" rel="noopener">Chevening official website</a></div>
+      <div><strong>Useful links</strong><a href="https://www.chevening.org/resource-hub/guidance/application-criteria/" target="_blank" rel="noopener">Official application criteria</a><br><a href="/privacy">Privacy</a><br><a href="/terms">Terms</a></div>
     </div>
     <div class="footer-bottom">ShortlistProof is independent and is not affiliated with, endorsed by, or operated by Chevening, the UK Government, FCDO, or any university. Chevening applications must remain the applicant’s own original work.</div>
   </div>
